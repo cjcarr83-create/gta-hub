@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Mux from "@mux/mux-node";
 import { createClient } from "@/lib/supabase/server";
 import { createTrustedClient } from "@/lib/supabase/trusted";
+import { getMux } from "@/lib/mux";
 import type { ContentCategory } from "@/lib/database.types";
-
-const mux = new Mux({
-  tokenId: process.env.MUX_TOKEN_ID,
-  tokenSecret: process.env.MUX_TOKEN_SECRET,
-});
 
 const RATE_LIMIT_WINDOW_MINUTES = 60;
 const RATE_LIMIT_MAX_STREAMS_CREATED = 5; // H13 fix
@@ -75,7 +70,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid category." }, { status: 400 });
   }
 
-  const liveStream = await mux.video.liveStreams.create({
+  const liveStream = await getMux().video.liveStreams.create({
     playback_policy: ["public"],
     new_asset_settings: { playback_policy: ["public"] },
   });
@@ -100,7 +95,7 @@ export async function POST(req: NextRequest) {
     // untracked and un-cleanable through the app). Now cleaned up
     // immediately on the failure path instead of left to accumulate.
     try {
-      await mux.video.liveStreams.delete(liveStream.id);
+      await getMux().video.liveStreams.delete(liveStream.id);
     } catch (cleanupErr) {
       console.error("Failed to clean up orphaned Mux live stream", liveStream.id, cleanupErr);
     }

@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-asphalt text-sand font-body antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display uppercase tracking-wide;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-sunset-amber;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-sunset-amber to-sunset-magenta text-asphalt font-semibold
+           rounded px-4 py-2 transition-transform active:scale-95;
+  }
+  .btn-secondary {
+    @apply bg-asphalt-panel border border-asphalt-line text-sand rounded px-4 py-2
+           hover:border-sunset-amber transition-colors;
+  }
+  .card {
+    @apply bg-asphalt-panel border border-asphalt-line rounded-lg p-4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

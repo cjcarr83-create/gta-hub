@@ -1,0 +1,51 @@
+import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import VideoCard from "@/components/VideoCard";
+import type { Video } from "@/lib/database.types";
+
+export const dynamic = "force-dynamic";
+
+export default async function FeedPage() {
+  const supabase = await createClient();
+
+  const { data: videos } = await supabase
+    .from("videos")
+    .select(
+      "id, user_id, crew_id, title, description, category, source, location_tag, thumbnail_url, processing_status, view_count, is_public, moderation_status, created_at, mux_asset_id, mux_upload_id, playback_id, duration_seconds, profiles(username, avatar_url, wanted_level, is_verified)"
+    )
+    .eq("is_public", true)
+    .eq("moderation_status", "visible")
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  return (
+    <main className="px-4 pt-6">
+      <header className="mb-6">
+        <h1 className="text-3xl bg-gradient-to-r from-sunset-amber to-sunset-magenta bg-clip-text text-transparent">
+          GTAHUB
+        </h1>
+        <p className="text-sm text-sand-muted">Clips, crews, live — Los Santos and beyond.</p>
+      </header>
+
+      <Link
+        href="/launch-hub"
+        className="mb-6 block rounded-lg border border-sunset-amber/40 bg-gradient-to-r from-sunset-amber/10 to-sunset-magenta/10 p-4"
+      >
+        <p className="text-xs uppercase tracking-widest text-sunset-amber">The big drop</p>
+        <p className="mt-1 font-display text-lg">GTA VI Launch Hub →</p>
+      </Link>
+
+      {!videos || videos.length === 0 ? (
+        <div className="card text-center text-sand-muted">
+          Nothing here yet. Be the first to post a clip.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {(videos as unknown as Video[]).map((video) => (
+            <VideoCard key={video.id} video={video} />
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

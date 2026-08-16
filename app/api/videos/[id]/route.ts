@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Mux from "@mux/mux-node";
 import { createClient } from "@/lib/supabase/server";
 import { createTrustedClient } from "@/lib/supabase/trusted";
-
-const mux = new Mux({
-  tokenId: process.env.MUX_TOKEN_ID,
-  tokenSecret: process.env.MUX_TOKEN_SECRET,
-});
+import { getMux } from "@/lib/mux";
 
 // C11 fix (Round 5 audit): Round 4's version had two real bugs:
 //
@@ -96,7 +92,7 @@ export async function DELETE(
 // "proceed anyway," which was Round 4's actual bug.
 async function tryDeleteAsset(assetId: string): Promise<boolean> {
   try {
-    await mux.video.assets.delete(assetId);
+    await getMux().video.assets.delete(assetId);
     return true;
   } catch (err) {
     if (err instanceof Mux.NotFoundError) {
@@ -110,7 +106,7 @@ async function tryDeleteAsset(assetId: string): Promise<boolean> {
 
 async function tryCancelUpload(uploadId: string): Promise<boolean> {
   try {
-    await mux.video.uploads.cancel(uploadId);
+    await getMux().video.uploads.cancel(uploadId);
     return true;
   } catch (err) {
     if (err instanceof Mux.NotFoundError) {

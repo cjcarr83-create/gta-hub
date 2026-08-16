@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Mux from "@mux/mux-node";
 import { createClient } from "@/lib/supabase/server";
 import { createTrustedClient } from "@/lib/supabase/trusted";
+import { getMux } from "@/lib/mux";
 import type { ContentCategory, ContentSource } from "@/lib/database.types";
-
-const mux = new Mux({
-  tokenId: process.env.MUX_TOKEN_ID,
-  tokenSecret: process.env.MUX_TOKEN_SECRET,
-});
 
 const RATE_LIMIT_WINDOW_MINUTES = 60;
 const RATE_LIMIT_MAX_UPLOADS = 10; // M6 — cheap DB-backed limit; swap for a
@@ -124,7 +119,7 @@ export async function POST(req: NextRequest) {
   // correctly in the creator's own content list instead of hanging.
   let upload;
   try {
-    upload = await mux.video.uploads.create({
+    upload = await getMux().video.uploads.create({
       cors_origin: process.env.NEXT_PUBLIC_APP_URL ?? "*",
       new_asset_settings: {
         playback_policy: ["public"],

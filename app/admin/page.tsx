@@ -9,6 +9,11 @@ import AdminConsole from "@/components/admin/AdminConsole";
 // independently re-check admin status on every call — this page-level
 // check is defense in depth, not the only thing standing between a
 // non-admin and these actions.
+//
+// force-dynamic explicit for the same reason as app/profile/page.tsx —
+// this page's access decision depends on a per-request auth check.
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
   const supabase = await createClient();
   const {

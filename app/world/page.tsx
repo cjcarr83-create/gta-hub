@@ -17,6 +17,11 @@ import { isControllerScheme } from "@/lib/world/controller";
 //   4. (Round 9) Has acknowledged the content warning at least once —
 //      see components/world/ContentWarningGate.tsx for what this is
 //      and, importantly, what it isn't.
+//
+// force-dynamic explicit for the same reason as app/profile/page.tsx —
+// this page redirects based on a per-request auth check.
+export const dynamic = "force-dynamic";
+
 export default async function WorldPage() {
   const supabase = await createClient();
   const {

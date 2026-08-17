@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function NewCrewPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [name, setName] = useState("");
   const [motto, setMotto] = useState("");
@@ -22,6 +21,7 @@ export default function NewCrewPage() {
     setStatus("submitting");
     setErrorMsg("");
 
+    const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

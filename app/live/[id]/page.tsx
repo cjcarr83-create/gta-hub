@@ -68,11 +68,11 @@ export default function LiveStreamPage({
   }, [stream, id, supabase]);
 
   if (loading) {
-    return <main className="px-4 pt-6 text-sand-muted">Loading…</main>;
+    return <main className="px-4 pt-6 text-frost-muted">Loading…</main>;
   }
 
   if (!stream) {
-    return <main className="px-4 pt-6 text-sand-muted">Stream not found.</main>;
+    return <main className="px-4 pt-6 text-frost-muted">Stream not found.</main>;
   }
 
   return (
@@ -87,7 +87,7 @@ export default function LiveStreamPage({
             style={{ width: "100%", aspectRatio: "16/9" }}
           />
         ) : (
-          <div className="flex aspect-video items-center justify-center text-sand-muted">
+          <div className="flex aspect-video items-center justify-center text-frost-muted">
             {stream.status === "ended" ? "This stream has ended." : "Waiting for the broadcast to start…"}
           </div>
         )}
@@ -95,19 +95,19 @@ export default function LiveStreamPage({
 
       <div className="mb-3 flex items-center gap-2">
         {stream.status === "live" && (
-          <span className="flex items-center gap-1 rounded-sm bg-blood px-2 py-0.5 text-[11px] font-display uppercase text-sand">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sand" />
+          <span className="flex items-center gap-1 rounded-sm bg-blood px-2 py-0.5 text-[11px] font-display uppercase text-frost">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-frost" />
             Live
           </span>
         )}
         <CategoryBadge category={stream.category} />
-        <span className="ml-auto text-xs text-sand-muted">
+        <span className="ml-auto text-xs text-frost-muted">
           {stream.viewer_count.toLocaleString()} watching
         </span>
       </div>
 
       <h1 className="mb-1 text-lg">{stream.title}</h1>
-      <p className="mb-4 text-sm text-sand-muted">@{stream.profiles?.username ?? "unknown"}</p>
+      <p className="mb-4 text-sm text-frost-muted">@{stream.profiles?.username ?? "unknown"}</p>
 
       <button onClick={() => setShowTip(true)} className="btn-primary w-full">
         Send a tip

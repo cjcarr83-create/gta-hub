@@ -36,7 +36,7 @@ export default function YouTubeEmbed({
   return (
     <button
       onClick={() => setPlaying(true)}
-      className="relative block aspect-video w-full overflow-hidden rounded bg-asphalt-line text-left"
+      className="relative block aspect-video w-full overflow-hidden rounded bg-ink-line text-left"
       aria-label={`Play: ${title}`}
     >
       {thumbnailUrl && (

@@ -132,16 +132,16 @@ const WorldChat = forwardRef<WorldChatHandle, { canvasRef: RefObject<WorldCanvas
 
   return (
     <div className="card mt-4">
-      <div className="mb-3 flex gap-2 border-b border-asphalt-line">
+      <div className="mb-3 flex gap-2 border-b border-ink-line">
         <button
           onClick={() => setTab("district")}
-          className={`px-3 py-2 text-sm ${tab === "district" ? "border-b-2 border-sunset-amber text-sand" : "text-sand-muted"}`}
+          className={`px-3 py-2 text-sm ${tab === "district" ? "border-b-2 border-neon-pink text-frost" : "text-frost-muted"}`}
         >
           District
         </button>
         <button
           onClick={() => setTab("nearby")}
-          className={`px-3 py-2 text-sm ${tab === "nearby" ? "border-b-2 border-sunset-amber text-sand" : "text-sand-muted"}`}
+          className={`px-3 py-2 text-sm ${tab === "nearby" ? "border-b-2 border-neon-pink text-frost" : "text-frost-muted"}`}
         >
           Nearby
         </button>
@@ -150,18 +150,18 @@ const WorldChat = forwardRef<WorldChatHandle, { canvasRef: RefObject<WorldCanvas
       {tab === "district" ? (
         <div className="mb-3 max-h-40 space-y-1 overflow-y-auto text-sm">
           {messages.length === 0 ? (
-            <p className="text-sand-muted">No messages yet — say something.</p>
+            <p className="text-frost-muted">No messages yet — say something.</p>
           ) : (
             messages.map((m) => (
               <p key={m.id}>
-                <span className="text-sunset-amber">@{m.username ?? "unknown"}</span>{" "}
-                <span className="text-sand">{m.content}</span>
+                <span className="text-neon-pink">@{m.username ?? "unknown"}</span>{" "}
+                <span className="text-frost">{m.content}</span>
               </p>
             ))
           )}
         </div>
       ) : (
-        <p className="mb-3 text-sm text-sand-muted">
+        <p className="mb-3 text-sm text-frost-muted">
           Messages here only reach players near you in The Block right now — watch for the
           speech bubble above their head.
         </p>
@@ -175,7 +175,7 @@ const WorldChat = forwardRef<WorldChatHandle, { canvasRef: RefObject<WorldCanvas
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           maxLength={MAX_MESSAGE_LENGTH}
           placeholder={tab === "district" ? "Say something to the district…" : "Say something nearby…"}
-          className="flex-1 rounded border border-asphalt-line bg-asphalt px-3 py-2 text-sm text-sand"
+          className="flex-1 rounded border border-ink-line bg-ink px-3 py-2 text-sm text-frost"
         />
         <button onClick={handleSend} className="btn-primary text-sm">
           Send

@@ -29,7 +29,7 @@ export default function CountdownTimer() {
   }, []);
 
   if (!parts) {
-    return <p className="text-lg text-sunset-amber">It&apos;s launch day.</p>;
+    return <p className="text-lg text-neon-pink">It&apos;s launch day.</p>;
   }
 
   return (
@@ -41,15 +41,15 @@ export default function CountdownTimer() {
           { label: "Min", value: parts.minutes },
           { label: "Sec", value: parts.seconds },
         ].map((unit) => (
-          <div key={unit.label} className="flex-1 rounded border border-asphalt-line bg-asphalt py-2 text-center">
-            <div className="font-display text-2xl bg-gradient-to-r from-sunset-amber to-sunset-magenta bg-clip-text text-transparent">
+          <div key={unit.label} className="flex-1 rounded border border-ink-line bg-ink py-2 text-center">
+            <div className="font-display text-2xl bg-gradient-to-r from-neon-pink to-neon-violet bg-clip-text text-transparent">
               {unit.value.toString().padStart(2, "0")}
             </div>
-            <div className="text-[10px] uppercase tracking-wide text-sand-muted">{unit.label}</div>
+            <div className="text-[10px] uppercase tracking-wide text-frost-muted">{unit.label}</div>
           </div>
         ))}
       </div>
-      <p className="mt-2 text-center text-xs text-sand-muted">
+      <p className="mt-2 text-center text-xs text-frost-muted">
         Until GTA VI — November 19, 2026 (Rockstar/Take-Two&apos;s most recently confirmed date)
       </p>
     </div>

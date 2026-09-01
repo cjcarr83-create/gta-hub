@@ -23,7 +23,7 @@ export default async function CrewsPage() {
       </div>
 
       {!crews || crews.length === 0 ? (
-        <div className="card text-center text-sand-muted">
+        <div className="card text-center text-frost-muted">
           No crews yet. Start one and recruit your first members.
         </div>
       ) : (
@@ -39,11 +39,11 @@ export default async function CrewsPage() {
               />
               <h3 className="text-sm leading-tight">{crew.name}</h3>
               {crew.motto && (
-                <p className="mt-1 text-xs text-sand-muted line-clamp-2">{crew.motto}</p>
+                <p className="mt-1 text-xs text-frost-muted line-clamp-2">{crew.motto}</p>
               )}
               <span
                 className={`mt-2 inline-block text-[10px] uppercase tracking-wide ${
-                  crew.recruitment_status === "open" ? "text-palm-teal" : "text-sand-muted"
+                  crew.recruitment_status === "open" ? "text-live-cyan" : "text-frost-muted"
                 }`}
               >
                 {crew.recruitment_status === "open" ? "Recruiting" : "Closed"}

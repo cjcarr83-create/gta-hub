@@ -51,13 +51,13 @@ export default function ContentWarningGate({
     <main className="flex min-h-[70vh] items-center px-4">
       <div className="card w-full">
         <h1 className="mb-2 text-xl text-blood">Before you enter The Block</h1>
-        <p className="mb-3 text-sm text-sand-muted">
+        <p className="mb-3 text-sm text-frost-muted">
           The Block includes simulated weapons and blood effects as part
           of its combat game. It&apos;s fictional and cartoonish in
           design, not realistic gore, but it is more intense than the
           rest of GTAHUB.
         </p>
-        <p className="mb-4 text-sm text-sand-muted">
+        <p className="mb-4 text-sm text-frost-muted">
           By continuing, you&apos;re confirming you&apos;re comfortable
           with this kind of content and old enough to view it under
           your local laws.

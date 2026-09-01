@@ -50,7 +50,7 @@ export default async function ProfilePage({
     <main className="px-4 pt-6">
       {isOwnProfile && payoutStatus !== "complete" && (
         <div className="card mb-4 flex items-center justify-between gap-3">
-          <p className="text-sm text-sand-muted">
+          <p className="text-sm text-frost-muted">
             Set up payouts to start receiving tips on your clips and streams.
           </p>
           <Link href="/creator/onboarding" className="btn-primary shrink-0 text-sm">
@@ -61,7 +61,7 @@ export default async function ProfilePage({
 
       {isOwnProfile && (
         <div className="card mb-4 flex items-center justify-between gap-3">
-          <p className="text-sm text-sand-muted">
+          <p className="text-sm text-frost-muted">
             {profile.avatar_url
               ? "Not feeling your look? Rebuild your AI character."
               : "Build an AI character to use as your avatar in The Block."}
@@ -82,7 +82,7 @@ export default async function ProfilePage({
               className="h-16 w-16 rounded-full object-cover"
             />
           ) : (
-            <div className="h-16 w-16 rounded-full bg-asphalt-line" />
+            <div className="h-16 w-16 rounded-full bg-ink-line" />
           )}
           <div>
             <h1 className="text-xl flex items-center gap-1.5">
@@ -92,9 +92,9 @@ export default async function ProfilePage({
             <WantedStars level={profile.wanted_level} size="lg" />
           </div>
         </div>
-        {profile.bio && <p className="text-sm text-sand-muted">{profile.bio}</p>}
+        {profile.bio && <p className="text-sm text-frost-muted">{profile.bio}</p>}
         {profile.crews && (
-          <p className="mt-2 text-xs text-sunset-amber">
+          <p className="mt-2 text-xs text-neon-pink">
             Crew: {(profile.crews as unknown as { name: string }).name}
           </p>
         )}
@@ -103,14 +103,14 @@ export default async function ProfilePage({
       <section>
         <h2 className="mb-3 text-lg">Garage</h2>
         {!garageBuilds || garageBuilds.length === 0 ? (
-          <div className="card text-center text-sm text-sand-muted">
+          <div className="card text-center text-sm text-frost-muted">
             No builds posted yet.
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {(garageBuilds as unknown as GarageBuild[]).map((build) => (
               <div key={build.id} className="card">
-                <div className="mb-2 aspect-video rounded bg-asphalt-line">
+                <div className="mb-2 aspect-video rounded bg-ink-line">
                   {build.photo_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -122,7 +122,7 @@ export default async function ProfilePage({
                 </div>
                 <h3 className="text-sm">{build.vehicle_name}</h3>
                 {build.performance_class && (
-                  <p className="text-xs text-sand-muted">{build.performance_class}</p>
+                  <p className="text-xs text-frost-muted">{build.performance_class}</p>
                 )}
               </div>
             ))}
@@ -132,7 +132,7 @@ export default async function ProfilePage({
 
       {isOwnProfile && (
         <div className="mt-6 text-center">
-          <Link href="/about" className="text-xs text-sand-muted hover:text-sand">
+          <Link href="/about" className="text-xs text-frost-muted hover:text-frost">
             About GTAHUB
           </Link>
         </div>

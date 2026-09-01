@@ -1,43 +1,46 @@
 import type { Config } from "tailwindcss";
 
-// Design tokens — "sun-bleached Los Santos" direction.
-// Deliberately not the generic near-black + single neon accent look:
-// warm asphalt background, dusk-gradient accents (amber -> magenta),
-// a muted palm-teal reserved for live/success states only.
+// Design tokens — "Vice City neon" direction (Round 11 restyle, replacing
+// the earlier "sun-bleached Los Santos" warm/amber palette per direct
+// creative direction from a reference mockup): near-black violet-navy
+// background, a hot pink -> electric violet gradient as the signature
+// accent, cyan reserved for live/success states, a vivid red reserved
+// for danger/destructive actions.
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        asphalt: {
-          DEFAULT: "#14120F", // page background
-          panel: "#1E1B17", // card/panel background
-          line: "#2C2822", // hairline borders
+        ink: {
+          DEFAULT: "#0B0712", // page background
+          panel: "#170F26", // card/panel background
+          line: "#2E2545", // hairline borders
         },
-        sand: {
-          DEFAULT: "#EDE6D6", // primary text
-          muted: "#9C9384", // secondary text
+        frost: {
+          DEFAULT: "#F5F1FA", // primary text
+          muted: "#9C93B8", // secondary text
         },
-        sunset: {
-          amber: "#F2A93B", // primary accent — signature gradient start
-          magenta: "#E14F63", // primary accent — signature gradient end
+        neon: {
+          pink: "#FF2E93", // primary accent — signature gradient start
+          violet: "#7C4DFF", // primary accent — signature gradient end
         },
-        palm: {
-          teal: "#2FA89A", // reserved: live indicators, success, money-positive
+        live: {
+          cyan: "#22D3EE", // reserved: live indicators, success, money-positive
         },
-        blood: "#C1373F", // reserved: destructive actions, wanted/danger states
+        blood: "#FF3B4E", // reserved: destructive actions, wanted/danger states
       },
       fontFamily: {
-        display: ["var(--font-display)", "sans-serif"], // condensed stencil-style headers
+        display: ["var(--font-display)", "sans-serif"], // condensed, heavy — headers, nav
+        script: ["var(--font-script)", "cursive"], // brush-marker accent — brand wordmark only
         body: ["var(--font-body)", "sans-serif"],
       },
       backgroundImage: {
-        "dusk-gradient": "linear-gradient(135deg, #F2A93B 0%, #E14F63 100%)",
+        "neon-gradient": "linear-gradient(135deg, #FF2E93 0%, #7C4DFF 100%)",
       },
       borderRadius: {
-        sm: "6px",
-        DEFAULT: "10px",
-        lg: "16px",
+        sm: "8px",
+        DEFAULT: "14px",
+        lg: "20px",
       },
     },
   },

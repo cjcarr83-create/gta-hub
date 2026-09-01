@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import VideoCard from "@/components/VideoCard";
+import Logo from "@/components/Logo";
 import type { Video } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -21,22 +22,20 @@ export default async function FeedPage() {
   return (
     <main className="px-4 pt-6">
       <header className="mb-6">
-        <h1 className="text-3xl bg-gradient-to-r from-sunset-amber to-sunset-magenta bg-clip-text text-transparent">
-          GTAHUB
-        </h1>
-        <p className="text-sm text-sand-muted">Clips, crews, live — Los Santos and beyond.</p>
+        <Logo />
+        <p className="mt-1 text-sm text-frost-muted">Clips, crews, live — Los Santos and beyond.</p>
       </header>
 
       <Link
         href="/launch-hub"
-        className="mb-6 block rounded-lg border border-sunset-amber/40 bg-gradient-to-r from-sunset-amber/10 to-sunset-magenta/10 p-4"
+        className="mb-6 block rounded-lg border border-neon-pink/40 bg-gradient-to-r from-neon-pink/10 to-neon-violet/10 p-4"
       >
-        <p className="text-xs uppercase tracking-widest text-sunset-amber">The big drop</p>
+        <p className="text-xs uppercase tracking-widest text-neon-pink">The big drop</p>
         <p className="mt-1 font-display text-lg">GTA VI Launch Hub →</p>
       </Link>
 
       {!videos || videos.length === 0 ? (
-        <div className="card text-center text-sand-muted">
+        <div className="card text-center text-frost-muted">
           Nothing here yet. Be the first to post a clip.
         </div>
       ) : (

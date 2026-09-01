@@ -59,29 +59,29 @@ export default function NewCrewPage() {
       <h1 className="mb-6 text-2xl">Start a crew</h1>
       <div className="card space-y-4">
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Crew name</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Crew name</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={40}
-            className="w-full rounded border border-asphalt-line bg-asphalt px-3 py-2"
+            className="w-full rounded border border-ink-line bg-ink px-3 py-2"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Motto</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Motto</label>
           <input
             value={motto}
             onChange={(e) => setMotto(e.target.value)}
-            className="w-full rounded border border-asphalt-line bg-asphalt px-3 py-2"
+            className="w-full rounded border border-ink-line bg-ink px-3 py-2"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Crew colour</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Crew colour</label>
           <input
             type="color"
             value={colorHex}
             onChange={(e) => setColorHex(e.target.value)}
-            className="h-10 w-16 rounded border border-asphalt-line bg-asphalt"
+            className="h-10 w-16 rounded border border-ink-line bg-ink"
           />
         </div>
         {errorMsg && <p className="text-sm text-blood">{errorMsg}</p>}

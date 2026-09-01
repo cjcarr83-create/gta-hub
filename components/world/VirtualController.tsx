@@ -111,7 +111,7 @@ function FaceButton({
       }}
       disabled={disabled}
       aria-label={ariaLabel}
-      className={`${dim} select-none rounded-full border-2 bg-black/50 font-display font-bold text-sand shadow-lg backdrop-blur-sm active:scale-95 disabled:opacity-40`}
+      className={`${dim} select-none rounded-full border-2 bg-black/50 font-display font-bold text-frost shadow-lg backdrop-blur-sm active:scale-95 disabled:opacity-40`}
       style={{ borderColor: accent, color: accent, touchAction: "none" }}
     >
       {glyph}

@@ -17,8 +17,8 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-20 border-t border-asphalt-line
-                 bg-asphalt/95 backdrop-blur"
+      className="fixed bottom-0 left-0 right-0 z-20 border-t border-ink-line
+                 bg-ink/95 backdrop-blur"
       aria-label="Primary"
     >
       <div className="mx-auto flex max-w-lg justify-between px-2 py-2">
@@ -30,7 +30,7 @@ export default function BottomNav() {
               href={tab.href}
               className={`flex-1 rounded py-2 text-center text-xs font-display uppercase
                           tracking-wide transition-colors
-                          ${active ? "text-sunset-amber" : "text-sand-muted hover:text-sand"}`}
+                          ${active ? "text-neon-pink" : "text-frost-muted hover:text-frost"}`}
             >
               {tab.label}
             </Link>

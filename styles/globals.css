@@ -4,27 +4,28 @@
 
 @layer base {
   body {
-    @apply bg-asphalt text-sand font-body antialiased;
+    @apply bg-ink text-frost font-body antialiased;
   }
   h1, h2, h3, h4 {
     @apply font-display uppercase tracking-wide;
   }
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-sunset-amber;
+    @apply outline-2 outline-offset-2 outline-neon-pink;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-sunset-amber to-sunset-magenta text-asphalt font-semibold
-           rounded px-4 py-2 transition-transform active:scale-95;
+    @apply bg-gradient-to-r from-neon-pink to-neon-violet text-white font-semibold
+           rounded-lg px-4 py-2.5 shadow-[0_0_20px_-6px_rgba(255,46,147,0.6)]
+           transition-transform active:scale-95;
   }
   .btn-secondary {
-    @apply bg-asphalt-panel border border-asphalt-line text-sand rounded px-4 py-2
-           hover:border-sunset-amber transition-colors;
+    @apply bg-ink-panel border border-ink-line text-frost rounded-lg px-4 py-2.5
+           hover:border-neon-violet transition-colors;
   }
   .card {
-    @apply bg-asphalt-panel border border-asphalt-line rounded-lg p-4;
+    @apply bg-ink-panel border border-ink-line rounded-lg p-4 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.6)];
   }
 }
 

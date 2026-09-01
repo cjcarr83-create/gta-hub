@@ -28,7 +28,14 @@ export default async function WorldPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/sign-in");
+  // Round 11: previously hard-redirected straight to /sign-in. Product
+  // direction is that The Block is pitched as a free side activity for
+  // people waiting to watch or waiting to go live — that only works as
+  // a hook if visitors can see what it is before being walled off, so
+  // signed-out visitors now get a preview + sign-up CTA instead of an
+  // immediate bounce. Actually playing still requires an account (rep,
+  // turf, and crew standing are tied to a real profile row).
+  if (!user) return <WorldPreview />;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -41,7 +48,7 @@ export default async function WorldPage() {
   if (profile.account_state !== "active") {
     return (
       <main className="px-4 pt-6">
-        <div className="card text-center text-sand-muted">
+        <div className="card text-center text-frost-muted">
           Your account can&apos;t enter The Block right now.
         </div>
       </main>
@@ -52,7 +59,7 @@ export default async function WorldPage() {
     return (
       <main className="px-4 pt-6">
         <div className="card text-center">
-          <p className="mb-3 text-sand-muted">
+          <p className="mb-3 text-frost-muted">
             Build your character before entering The Block.
           </p>
           <Link href="/onboarding/avatar" className="btn-primary inline-block">
@@ -68,13 +75,13 @@ export default async function WorldPage() {
       <header className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl">The Block</h1>
-          <p className="text-sm text-sand-muted">
+          <p className="text-sm text-frost-muted">
             Everyone online, one shared street. Fight, team up, run jobs, or just hang out.
           </p>
         </div>
         <div className="text-right">
-          <p className="text-lg text-sunset-amber">{profile.rep}</p>
-          <p className="text-[11px] text-sand-muted">REP</p>
+          <p className="text-lg text-neon-pink">{profile.rep}</p>
+          <p className="text-[11px] text-frost-muted">REP</p>
         </div>
       </header>
 
@@ -94,7 +101,7 @@ export default async function WorldPage() {
 
       {!profile.crew_id && (
         <div className="card mt-4 flex items-center justify-between gap-3">
-          <p className="text-sm text-sand-muted">
+          <p className="text-sm text-frost-muted">
             No crew yet — join one so teammates can&apos;t accidentally (or deliberately) fight you.
           </p>
           <Link href="/crews" className="btn-primary shrink-0 text-sm">
@@ -104,6 +111,50 @@ export default async function WorldPage() {
       )}
 
       <WorldLeaderboard />
+    </main>
+  );
+}
+
+// Shown to signed-out visitors instead of a hard redirect. The Block is
+// positioned as a free side activity — something to do while waiting
+// for a stream to start or waiting to go live yourself — so it needs to
+// sell itself before the sign-up wall, not hide behind it.
+//
+// The preview clip slot below is a placeholder: no recorded gameplay
+// footage exists yet to embed here. Swap the placeholder block for a
+// short muted video/gif once one exists.
+function WorldPreview() {
+  return (
+    <main className="px-4 pt-6 pb-24">
+      <header className="mb-4">
+        <h1 className="text-2xl">The Block</h1>
+        <p className="mt-1 text-sm text-frost-muted">
+          A shared top-down street brawl, right in the app. Fight, team up, run jobs,
+          capture turf — or just hang out while you wait for a stream to start.
+        </p>
+      </header>
+
+      <div className="card mb-4 flex aspect-video items-center justify-center border-neon-violet/30 bg-gradient-to-br from-neon-pink/10 to-neon-violet/10">
+        <div className="text-center">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-ink/60 text-2xl">
+            ▶
+          </div>
+          <p className="text-xs uppercase tracking-widest text-frost-muted">
+            Gameplay preview coming soon
+          </p>
+        </div>
+      </div>
+
+      <div className="card mb-4 space-y-2 text-sm text-frost-muted">
+        <p>• Free-for-all or squad up with your crew</p>
+        <p>• Capture and hold turf across four zones</p>
+        <p>• Missions, jobs, and a live leaderboard</p>
+        <p>• Built for quick sessions between streams</p>
+      </div>
+
+      <Link href="/sign-in" className="btn-primary block w-full text-center">
+        Sign up free to play
+      </Link>
     </main>
   );
 }

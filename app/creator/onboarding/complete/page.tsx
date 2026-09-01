@@ -19,7 +19,7 @@ export default async function OnboardingCompletePage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return <main className="px-4 pt-6 text-sand-muted">Sign in to check your status.</main>;
+    return <main className="px-4 pt-6 text-frost-muted">Sign in to check your status.</main>;
   }
 
   const trusted = createTrustedClient();
@@ -33,9 +33,9 @@ export default async function OnboardingCompletePage() {
   if (!payoutAccount) {
     return (
       <main className="px-4 pt-6">
-        <div className="card text-center text-sand-muted">
+        <div className="card text-center text-frost-muted">
           No onboarding in progress.{" "}
-          <Link href="/creator/onboarding" className="text-sunset-amber">
+          <Link href="/creator/onboarding" className="text-neon-pink">
             Start here
           </Link>
           .
@@ -57,15 +57,15 @@ export default async function OnboardingCompletePage() {
       <div className="card text-center">
         {isComplete ? (
           <>
-            <p className="mb-3 text-lg text-palm-teal">You&apos;re tip-ready</p>
-            <p className="text-sm text-sand-muted">
+            <p className="mb-3 text-lg text-live-cyan">You&apos;re tip-ready</p>
+            <p className="text-sm text-frost-muted">
               Payouts are set up. Tips on your clips and streams will now go through.
             </p>
           </>
         ) : (
           <>
-            <p className="mb-3 text-lg text-sunset-amber">Not quite finished</p>
-            <p className="mb-4 text-sm text-sand-muted">
+            <p className="mb-3 text-lg text-neon-pink">Not quite finished</p>
+            <p className="mb-4 text-sm text-frost-muted">
               Stripe still needs a bit more information before payouts can start.
             </p>
             <Link href="/creator/onboarding" className="btn-primary inline-block">

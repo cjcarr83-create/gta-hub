@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 
 // Phase 1 prototype of a real 3D version of The Block — see
 // app/world/3d-preview/page.tsx. Deliberately built from primitive
-// geometry (boxes, cylinders, capsules) rather than downloaded models:
+// geometry (boxes, capsules, planes) rather than downloaded models:
 // this sandbox's network policy blocks reaching external asset hosts,
 // and more importantly this avoids any licensing ambiguity entirely —
 // nothing here is copied or derived from any existing game's assets.
@@ -56,6 +57,37 @@ function City() {
     return items;
   }, []);
 
+  const parkedCars = useMemo(() => {
+    const rand = seededRandom(99);
+    const items: { x: number; z: number; rotationY: number; color: string }[] = [];
+    const palette = ["#2E2450", "#3A2E1F", "#1F3A3A", "#3A1F2E", "#22303A"];
+    for (let gx = -GRID; gx <= GRID; gx += 3) {
+      for (let gz = -GRID + 1; gz < GRID; gz++) {
+        if (gz % 3 === 0) continue;
+        if (rand() > 0.55) continue;
+        const side = rand() > 0.5 ? 2.6 : -2.6;
+        items.push({
+          x: gx * BLOCK + side,
+          z: gz * BLOCK + (rand() - 0.5) * 2,
+          rotationY: side > 0 ? Math.PI / 2 : -Math.PI / 2,
+          color: palette[Math.floor(rand() * palette.length)] ?? "#2E2450",
+        });
+      }
+    }
+    return items;
+  }, []);
+
+  const streetLights = useMemo(() => {
+    const items: [number, number, number][] = [];
+    for (let gx = -GRID; gx <= GRID; gx += 3) {
+      for (let gz = -GRID; gz <= GRID; gz += 3) {
+        items.push([gx * BLOCK + 1.8, 0, gz * BLOCK + 1.8]);
+        items.push([gx * BLOCK - 1.8, 0, gz * BLOCK - 1.8]);
+      }
+    }
+    return items;
+  }, []);
+
   return (
     <group>
       {buildings.map((b, i) => (
@@ -77,23 +109,96 @@ function City() {
               <meshStandardMaterial
                 color={wi % 2 === 0 ? "#FF2E93" : "#22D3EE"}
                 emissive={wi % 2 === 0 ? "#FF2E93" : "#22D3EE"}
-                emissiveIntensity={1.4}
+                emissiveIntensity={1.8}
                 toneMapped={false}
               />
             </mesh>
           ))}
         </group>
       ))}
+      {parkedCars.map((c, i) => (
+        <Car key={i} position={[c.x, 0, c.z]} rotationY={c.rotationY} color={c.color} />
+      ))}
+      {streetLights.map((p, i) => (
+        <StreetLight key={i} position={p} />
+      ))}
+    </group>
+  );
+}
+
+function Car({
+  position,
+  rotationY = 0,
+  color = "#2E2450",
+}: {
+  position: [number, number, number];
+  rotationY?: number;
+  color?: string;
+}) {
+  const wheelPositions: [number, number, number][] = [
+    [-0.55, 0.25, 0.8],
+    [0.55, 0.25, 0.8],
+    [-0.55, 0.25, -0.8],
+    [0.55, 0.25, -0.8],
+  ];
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.1, 0.5, 2.4]} />
+        <meshStandardMaterial color={color} roughness={0.35} metalness={0.4} />
+      </mesh>
+      <mesh position={[0, 0.75, -0.2]} castShadow>
+        <boxGeometry args={[0.9, 0.4, 1.1]} />
+        <meshStandardMaterial color={color} roughness={0.2} metalness={0.5} />
+      </mesh>
+      <mesh position={[0.35, 0.4, 1.19]}>
+        <boxGeometry args={[0.2, 0.12, 0.05]} />
+        <meshStandardMaterial color="#FFF7D6" emissive="#FFF7D6" emissiveIntensity={1.4} toneMapped={false} />
+      </mesh>
+      <mesh position={[-0.35, 0.4, 1.19]}>
+        <boxGeometry args={[0.2, 0.12, 0.05]} />
+        <meshStandardMaterial color="#FFF7D6" emissive="#FFF7D6" emissiveIntensity={1.4} toneMapped={false} />
+      </mesh>
+      <mesh position={[0.35, 0.4, -1.19]}>
+        <boxGeometry args={[0.2, 0.12, 0.05]} />
+        <meshStandardMaterial color="#FF2E44" emissive="#FF2E44" emissiveIntensity={1.4} toneMapped={false} />
+      </mesh>
+      <mesh position={[-0.35, 0.4, -1.19]}>
+        <boxGeometry args={[0.2, 0.12, 0.05]} />
+        <meshStandardMaterial color="#FF2E44" emissive="#FF2E44" emissiveIntensity={1.4} toneMapped={false} />
+      </mesh>
+      {wheelPositions.map((p, i) => (
+        <mesh key={i} position={p} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.28, 0.28, 0.22, 12]} />
+          <meshStandardMaterial color="#0B0712" roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function StreetLight({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 1.5, 0]} castShadow>
+        <cylinderGeometry args={[0.05, 0.06, 3, 8]} />
+        <meshStandardMaterial color="#170F26" roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 3.05, 0]}>
+        <sphereGeometry args={[0.15, 12, 12]} />
+        <meshStandardMaterial color="#FFE9B0" emissive="#FFE9B0" emissiveIntensity={2.2} toneMapped={false} />
+      </mesh>
+      <pointLight position={[0, 3.05, 0]} color="#FFD98A" intensity={4} distance={10} decay={2} />
     </group>
   );
 }
 
 function Ground() {
   const roadLines = useMemo(() => {
-    const lines: { pos: [number, number, number]; size: [number, number] }[] = [];
+    const lines: { pos: [number, number, number]; size: [number, number]; vertical: boolean }[] = [];
     for (let g = -GRID; g <= GRID; g += 3) {
-      lines.push({ pos: [g * BLOCK, 0.01, 0], size: [4, GRID * BLOCK * 2 + 8] });
-      lines.push({ pos: [0, 0.01, g * BLOCK], size: [GRID * BLOCK * 2 + 8, 4] });
+      lines.push({ pos: [g * BLOCK, 0.01, 0], size: [4, GRID * BLOCK * 2 + 8], vertical: true });
+      lines.push({ pos: [0, 0.01, g * BLOCK], size: [GRID * BLOCK * 2 + 8, 4], vertical: false });
     }
     return lines;
   }, []);
@@ -105,27 +210,40 @@ function Ground() {
         <meshStandardMaterial color="#1C1430" roughness={1} />
       </mesh>
       {roadLines.map((r, i) => (
-        <mesh key={i} position={r.pos} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <planeGeometry args={r.size} />
-          <meshStandardMaterial color="#2E2450" roughness={0.9} />
-        </mesh>
+        <group key={i}>
+          <mesh position={r.pos} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={r.size} />
+            <meshStandardMaterial color="#2E2450" roughness={0.9} />
+          </mesh>
+          <mesh position={[r.pos[0], 0.02, r.pos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={r.vertical ? [0.25, r.size[1]] : [r.size[0], 0.25]} />
+            <meshStandardMaterial color="#F2C744" emissive="#F2C744" emissiveIntensity={0.5} toneMapped={false} />
+          </mesh>
+        </group>
       ))}
     </group>
   );
 }
 
-// Owns the player's position and the chase camera entirely through its
-// own local refs (never received as a prop to mutate) — keyboard input,
-// the per-frame position update, the player mesh, and the camera follow
-// all live in one component so nothing here mutates state it doesn't
-// own.
+// Owns the player's position, facing, walk-cycle animation, and the
+// chase camera entirely through its own local refs (never received as
+// a prop to mutate) — keyboard input, the per-frame position update,
+// the articulated character, and the camera follow all live in one
+// component so nothing here mutates state it doesn't own.
 function PlayerRig() {
   const playerGroup = useRef<THREE.Group>(null);
   const position = useRef(new THREE.Vector3(0, 0, 0));
+  const facing = useRef(0);
+  const walkPhase = useRef(0);
   const keys = useRef<Record<string, boolean>>({});
   const { camera } = useThree();
   const cameraTarget = useRef(new THREE.Vector3());
   const cameraLookAt = useRef(new THREE.Vector3());
+
+  const leftLeg = useRef<THREE.Group>(null);
+  const rightLeg = useRef<THREE.Group>(null);
+  const leftArm = useRef<THREE.Group>(null);
+  const rightArm = useRef<THREE.Group>(null);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -145,16 +263,43 @@ function PlayerRig() {
   useFrame((_, delta) => {
     const speed = 6 * delta;
     const k = keys.current;
-    if (k["w"] || k["arrowup"]) position.current.z -= speed;
-    if (k["s"] || k["arrowdown"]) position.current.z += speed;
-    if (k["a"] || k["arrowleft"]) position.current.x -= speed;
-    if (k["d"] || k["arrowright"]) position.current.x += speed;
+    let dx = 0;
+    let dz = 0;
+    if (k["w"] || k["arrowup"]) dz -= 1;
+    if (k["s"] || k["arrowdown"]) dz += 1;
+    if (k["a"] || k["arrowleft"]) dx -= 1;
+    if (k["d"] || k["arrowright"]) dx += 1;
+    const moving = dx !== 0 || dz !== 0;
+
+    if (moving) {
+      const len = Math.hypot(dx, dz) || 1;
+      position.current.x += (dx / len) * speed;
+      position.current.z += (dz / len) * speed;
+      facing.current = Math.atan2(dx, dz);
+      walkPhase.current += delta * 10;
+    }
 
     if (playerGroup.current) {
       playerGroup.current.position.copy(position.current);
+      playerGroup.current.rotation.y = facing.current;
     }
 
-    cameraTarget.current.set(position.current.x, position.current.y + 6, position.current.z + 9);
+    const swing = moving ? Math.sin(walkPhase.current) * 0.7 : 0;
+    if (leftLeg.current) leftLeg.current.rotation.x = swing;
+    if (rightLeg.current) rightLeg.current.rotation.x = -swing;
+    if (leftArm.current) leftArm.current.rotation.x = -swing;
+    if (rightArm.current) rightArm.current.rotation.x = swing;
+
+    // Chase camera stays behind the character relative to facing, not
+    // a fixed world offset — turns with the player like a real
+    // third-person camera.
+    const fx = Math.sin(facing.current);
+    const fz = Math.cos(facing.current);
+    cameraTarget.current.set(
+      position.current.x - fx * 8,
+      position.current.y + 5.5,
+      position.current.z - fz * 8
+    );
     camera.position.lerp(cameraTarget.current, 0.08);
     cameraLookAt.current.lerp(position.current, 0.15);
     camera.lookAt(cameraLookAt.current.x, cameraLookAt.current.y + 1, cameraLookAt.current.z);
@@ -162,22 +307,51 @@ function PlayerRig() {
 
   return (
     <group ref={playerGroup}>
-      <mesh position={[0, 0.9, 0]} castShadow>
-        <capsuleGeometry args={[0.4, 1.0, 4, 8]} />
+      {/* torso */}
+      <mesh position={[0, 1.0, 0]} castShadow>
+        <boxGeometry args={[0.5, 0.7, 0.3]} />
         <meshStandardMaterial color="#FF2E93" roughness={0.5} />
       </mesh>
-      <mesh position={[0, 1.75, 0]} castShadow>
-        <sphereGeometry args={[0.28, 16, 16]} />
+      {/* head */}
+      <mesh position={[0, 1.55, 0]} castShadow>
+        <sphereGeometry args={[0.22, 16, 16]} />
         <meshStandardMaterial color="#F5F1FA" roughness={0.6} />
       </mesh>
-      <pointLight position={[0, 2.2, 0]} color="#FF2E93" intensity={2} distance={4} />
+      {/* legs — each a group pivoted at the hip so rotation swings
+          like a real limb instead of spinning around its own middle */}
+      <group ref={leftLeg} position={[-0.15, 0.65, 0]}>
+        <mesh position={[0, -0.325, 0]} castShadow>
+          <boxGeometry args={[0.18, 0.65, 0.18]} />
+          <meshStandardMaterial color="#170F26" roughness={0.6} />
+        </mesh>
+      </group>
+      <group ref={rightLeg} position={[0.15, 0.65, 0]}>
+        <mesh position={[0, -0.325, 0]} castShadow>
+          <boxGeometry args={[0.18, 0.65, 0.18]} />
+          <meshStandardMaterial color="#170F26" roughness={0.6} />
+        </mesh>
+      </group>
+      {/* arms — pivoted at the shoulder */}
+      <group ref={leftArm} position={[-0.35, 1.3, 0]}>
+        <mesh position={[0, -0.275, 0]} castShadow>
+          <boxGeometry args={[0.15, 0.55, 0.15]} />
+          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </mesh>
+      </group>
+      <group ref={rightArm} position={[0.35, 1.3, 0]}>
+        <mesh position={[0, -0.275, 0]} castShadow>
+          <boxGeometry args={[0.15, 0.55, 0.15]} />
+          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </mesh>
+      </group>
+      <pointLight position={[0, 2.0, 0]} color="#FF2E93" intensity={0.4} distance={3} decay={2} />
     </group>
   );
 }
 
 export default function World3DScene() {
   return (
-    <Canvas shadows camera={{ fov: 55 }} className="!h-full !w-full">
+    <Canvas shadows camera={{ fov: 55, position: [0, 5.5, -8] }} className="!h-full !w-full">
       <color attach="background" args={["#0B0712"]} />
       <fog attach="fog" args={["#150E24", 25, 80]} />
       <hemisphereLight args={["#6F7FE0", "#0B0712", 1.1]} />
@@ -193,6 +367,10 @@ export default function World3DScene() {
       <Ground />
       <City />
       <PlayerRig />
+      <EffectComposer>
+        <Bloom luminanceThreshold={0.45} luminanceSmoothing={0.9} intensity={0.6} mipmapBlur />
+        <Vignette eskil={false} offset={0.3} darkness={0.6} />
+      </EffectComposer>
     </Canvas>
   );
 }

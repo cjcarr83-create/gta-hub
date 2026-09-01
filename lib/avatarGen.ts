@@ -1,4 +1,5 @@
 import "server-only";
+import { createTrustedClient } from "@/lib/supabase/trusted";
 import type { AvatarStyle, HairStyle, OutfitStyle, Accessory, Vibe } from "@/lib/avatarStyles";
 
 export type { AvatarStyle } from "@/lib/avatarStyles";
@@ -59,9 +60,10 @@ function buildPrompt(style: AvatarStyle): string {
     `${HAIR_STYLE_PHRASE[style.hairStyle]}, ${style.hairColor} hair color.`,
     `Wearing ${OUTFIT_PHRASE[style.outfit]}${ACCESSORY_PHRASE[style.accessory]}.`,
     `Expression: ${VIBE_PHRASE[style.vibe]}.`,
-    "Art direction: sun-bleached open-world crime-drama city aesthetic —",
-    "warm dusk color grade, amber-to-magenta gradient lighting, slightly",
-    "graphic/poster-illustration rendering rather than photoreal.",
+    "Art direction: neon Vice City open-world crime-drama aesthetic —",
+    "moody night-time color grade, hot pink-to-electric-violet neon",
+    "lighting accents, slightly graphic/poster-illustration rendering",
+    "rather than photoreal.",
     "This is an original character design, not a depiction of any real",
     "person or any existing copyrighted character.",
   ].join(" ");
@@ -77,28 +79,35 @@ export interface AvatarGenerationFailure {
   error: string;
 }
 
-// ---------- PROVIDER ----------
-// Deliberately left as a documented stub rather than hard-wiring a
-// specific vendor: image-gen provider choice is a cost/speed/licensing
-// decision (OpenAI's Images API, Replicate-hosted SDXL, Stability,
-// etc.), not something to lock in silently. Whichever is chosen,
-// implement it here — everything upstream (the route, the rate limit,
-// the trait validation) is already provider-agnostic and won't need to
-// change.
+// ---------- PROVIDER: Google Gemini (free tier) ----------
+// Chosen specifically because it's the only image-generation API with a
+// genuine ongoing free tier (not just trial credits) suitable for a
+// hobby-scale, rate-limited feature like this one (see
+// RATE_LIMIT_MAX_GENERATIONS in the route — 5/user/hour). On the free
+// tier, prompts/images may be used by Google to improve their products;
+// that's an acceptable trade-off here since every prompt is built from
+// a fixed, non-identifying trait list (see the copyright/injection note
+// at the top of avatarStyles.ts) — never a user photo or real likeness.
 //
-// Contract: given a validated AvatarStyle, return a hosted image URL
-// (or throw/return a failure). Must resolve synchronously from the
-// caller's perspective — app/api/profile/generate-avatar/route.ts
-// awaits this directly rather than polling, same as any provider whose
-// API returns the image inline. If the provider you wire up is
-// webhook/async instead (submit job → webhook delivers result later,
-// like Mux), don't force it synchronous here — instead give
-// avatar_generations.status a 'pending' row immediately, return that
-// to the client, add a webhook route under app/api/webhooks/, and
-// have the client poll GET the generation row the same way
-// app/upload/page.tsx doesn't wait on Mux processing today.
+// Gemini's generateContent endpoint returns image bytes inline (base64),
+// not a hosted URL, so this uploads the result to a public Supabase
+// Storage bucket ("avatars") and returns that public URL — keeping the
+// contract below (a hosted image URL) the same as any other provider.
+const GEMINI_MODEL = process.env.AVATAR_GEMINI_MODEL ?? "gemini-2.5-flash-image";
+
+// Contract: given a validated AvatarStyle and the requesting user's id
+// (used only to namespace the storage path), return a hosted image URL
+// (or a failure). Must resolve synchronously from the caller's
+// perspective — app/api/profile/generate-avatar/route.ts awaits this
+// directly rather than polling. If a future provider is async/webhook-
+// based instead, don't force it synchronous here — give
+// avatar_generations.status a 'pending' row immediately, return that to
+// the client, add a webhook route under app/api/webhooks/, and have the
+// client poll the generation row the same way app/upload/page.tsx
+// doesn't wait on Mux processing today.
 export async function generateAvatarImage(
-  style: AvatarStyle
+  style: AvatarStyle,
+  userId: string
 ): Promise<AvatarGenerationResult | AvatarGenerationFailure> {
   const apiKey = process.env.AVATAR_PROVIDER_API_KEY;
   if (!apiKey) {
@@ -106,21 +115,61 @@ export async function generateAvatarImage(
       ok: false,
       error:
         "No image generation provider configured. Set AVATAR_PROVIDER_API_KEY " +
-        "and implement the call in lib/avatarGen.ts (generateAvatarImage).",
+        "to a Gemini API key from aistudio.google.com/apikey.",
     };
   }
 
   const prompt = buildPrompt(style);
 
   try {
-    // Example shape for a synchronous provider — replace with whichever
-    // vendor you choose. Left unimplemented on purpose rather than
-    // guessing at an API contract for a vendor you haven't picked yet.
-    throw new Error(
-      "generateAvatarImage() provider call not yet implemented — see the " +
-        "comment above this function. Prompt was built successfully: " +
-        JSON.stringify({ promptPreview: prompt.slice(0, 60) + "…" })
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ["IMAGE"] },
+        }),
+      }
     );
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`Gemini API error (${res.status}): ${errText.slice(0, 300)}`);
+    }
+
+    const data = (await res.json()) as {
+      candidates?: Array<{
+        content?: { parts?: Array<{ inlineData?: { mimeType: string; data: string } }> };
+      }>;
+    };
+    const parts = data.candidates?.[0]?.content?.parts;
+    const imagePart = parts?.find((p) => p.inlineData?.data);
+
+    if (!imagePart?.inlineData) {
+      throw new Error("Gemini response did not include image data.");
+    }
+
+    const { mimeType, data: base64 } = imagePart.inlineData;
+    const bytes = Buffer.from(base64, "base64");
+    const ext = mimeType === "image/jpeg" ? "jpg" : "png";
+    const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+
+    const trusted = createTrustedClient();
+    const { error: uploadError } = await trusted.storage
+      .from("avatars")
+      .upload(path, bytes, { contentType: mimeType, upsert: true });
+
+    if (uploadError) {
+      throw new Error(`Could not store generated avatar: ${uploadError.message}`);
+    }
+
+    const {
+      data: { publicUrl },
+    } = trusted.storage.from("avatars").getPublicUrl(path);
+
+    return { ok: true, imageUrl: publicUrl, provider: "gemini" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Generation failed." };
   }

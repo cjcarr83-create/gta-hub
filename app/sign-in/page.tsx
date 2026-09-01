@@ -33,12 +33,22 @@ export default function SignInPage() {
 
   async function signIn() {
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setMessage(error.message);
-    } else {
-      router.push("/");
+      return;
     }
+
+    // Send fresh accounts straight into character creation instead of
+    // leaving it undiscoverable until they try to enter The Block (the
+    // only other place that checks for a missing avatar_url).
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", data.user.id)
+      .single();
+
+    router.push(profile?.avatar_url ? "/" : "/onboarding/avatar");
   }
 
   return (

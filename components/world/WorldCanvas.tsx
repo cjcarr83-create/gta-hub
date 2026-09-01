@@ -68,14 +68,14 @@ interface RemotePlayer {
 }
 
 const COLORS = {
-  asphalt: "#14120F",
-  panel: "#1E1B17",
-  line: "#2C2822",
-  sand: "#EDE6D6",
-  amber: "#F2A93B",
-  magenta: "#E14F63",
-  teal: "#2FA89A",
-  blood: "#C1373F",
+  ink: "#0B0712",
+  panel: "#170F26",
+  line: "#2E2545",
+  sand: "#F5F1FA",
+  amber: "#FF2E93",
+  magenta: "#7C4DFF",
+  teal: "#22D3EE",
+  blood: "#FF3B4E",
 };
 
 const avatarImageCache = new Map<string, HTMLImageElement>();
@@ -918,30 +918,30 @@ const WorldCanvas = forwardRef<WorldCanvasHandle, WorldCanvasProps>(function Wor
         ref={canvasRef}
         width={WORLD_WIDTH}
         height={WORLD_HEIGHT}
-        className="w-full rounded-lg border border-asphalt-line bg-asphalt"
+        className="w-full rounded-lg border border-ink-line bg-ink"
         style={{ aspectRatio: `${WORLD_WIDTH} / ${WORLD_HEIGHT}`, touchAction: "none" }}
         aria-label="The Block — live open world"
         role="img"
       />
-      <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-sm bg-black/60 px-2 py-1 text-[11px] text-sand-muted">
-        <span className="h-1.5 w-1.5 rounded-full bg-palm-teal animate-pulse" />
+      <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-sm bg-black/60 px-2 py-1 text-[11px] text-frost-muted">
+        <span className="h-1.5 w-1.5 rounded-full bg-live-cyan animate-pulse" />
         {onlineCount} in The Block
       </div>
-      <div className="absolute right-3 top-3 rounded-sm bg-black/60 px-2 py-1 text-[11px] text-sand-muted">
+      <div className="absolute right-3 top-3 rounded-sm bg-black/60 px-2 py-1 text-[11px] text-frost-muted">
         {drivingName ? `Driving: ${drivingName}` : `Armed: ${WEAPONS[weaponDisplay].label}`}
       </div>
       {activeMission && (
-        <div className="absolute left-3 top-9 rounded-sm bg-black/60 px-2 py-1 text-[11px] text-sunset-amber">
+        <div className="absolute left-3 top-9 rounded-sm bg-black/60 px-2 py-1 text-[11px] text-neon-pink">
           {MISSIONS[activeMission.id].title}: {missionProgressText(activeMission)}
         </div>
       )}
       {nearVehicle && !drivingName && (
-        <div className="absolute left-1/2 bottom-24 -translate-x-1/2 rounded-sm bg-black/70 px-3 py-1 text-xs text-sand">
+        <div className="absolute left-1/2 bottom-24 -translate-x-1/2 rounded-sm bg-black/70 px-3 py-1 text-xs text-frost">
           {showTouchControls ? "Tap Interact" : "Press E"} to get in the {nearVehicle}
         </div>
       )}
       {toast && (
-        <div className="absolute left-1/2 top-14 -translate-x-1/2 rounded-sm bg-blood/90 px-3 py-1.5 text-center text-xs text-sand shadow-lg">
+        <div className="absolute left-1/2 top-14 -translate-x-1/2 rounded-sm bg-blood/90 px-3 py-1.5 text-center text-xs text-frost shadow-lg">
           {toast}
         </div>
       )}
@@ -955,7 +955,7 @@ const WorldCanvas = forwardRef<WorldCanvasHandle, WorldCanvasProps>(function Wor
           attackDisabled={attackOnCooldown}
         />
       )}
-      <p className="mt-2 text-center text-xs text-sand-muted">
+      <p className="mt-2 text-center text-xs text-frost-muted">
         {showTouchControls
           ? "Stick to move (up = gas in a car). Attack to fight, Interact to get in/out of cars."
           : "WASD/arrows to move (W = gas, S = brake in a car), Space to fight, E to get in/out of cars."}

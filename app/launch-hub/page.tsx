@@ -30,7 +30,7 @@ export default async function LaunchHubPage() {
   return (
     <main className="px-4 pt-6">
       <header className="mb-6 text-center">
-        <p className="mb-1 text-xs uppercase tracking-widest text-sunset-amber">The big drop</p>
+        <p className="mb-1 text-xs uppercase tracking-widest text-neon-pink">The big drop</p>
         <h1 className="text-3xl">GTA VI Launch Hub</h1>
       </header>
 
@@ -46,7 +46,7 @@ export default async function LaunchHubPage() {
               <div key={v.id}>
                 <YouTubeEmbed videoId={v.youtube_video_id} title={v.title} thumbnailUrl={v.thumbnail_url} />
                 <p className="mt-2 text-sm">{v.title}</p>
-                {v.channel_title && <p className="text-xs text-sand-muted">{v.channel_title}</p>}
+                {v.channel_title && <p className="text-xs text-frost-muted">{v.channel_title}</p>}
               </div>
             ))}
           </div>
@@ -65,12 +65,12 @@ export default async function LaunchHubPage() {
       )}
 
       {(!youtubeEmbeds || youtubeEmbeds.length === 0) && (!hypeClips || hypeClips.length === 0) && (
-        <div className="card text-center text-sand-muted">
+        <div className="card text-center text-frost-muted">
           Nothing here yet — check back as launch gets closer.
         </div>
       )}
 
-      <p className="mt-8 text-center text-xs text-sand-muted">
+      <p className="mt-8 text-center text-xs text-frost-muted">
         GTAHUB is an independent, fan-made platform. Not affiliated with{" "}
         Rockstar Games or Take-Two Interactive.{" "}
         <Link href="/about" className="underline">

@@ -34,7 +34,7 @@ export default function VideoCard({ video }: { video: Video }) {
           actually playable. Now renders the real Mux player once the
           asset is ready, falls back to the thumbnail/poster while
           processing. */}
-      <div className="mb-3 overflow-hidden rounded bg-asphalt-line">
+      <div className="mb-3 overflow-hidden rounded bg-ink-line">
         {video.processing_status === "ready" && video.playback_id ? (
           <MuxPlayer
             playbackId={video.playback_id}
@@ -44,7 +44,7 @@ export default function VideoCard({ video }: { video: Video }) {
             onPlay={handlePlay}
           />
         ) : (
-          <div className="flex aspect-video items-center justify-center text-xs text-sand-muted">
+          <div className="flex aspect-video items-center justify-center text-xs text-frost-muted">
             {video.processing_status === "failed" ? "Processing failed" : "Processing…"}
           </div>
         )}
@@ -53,7 +53,7 @@ export default function VideoCard({ video }: { video: Video }) {
       <div className="mb-2 flex items-center gap-2">
         <CategoryBadge category={video.category} />
         {video.source !== "vanilla" && (
-          <span className="text-[11px] uppercase tracking-wide text-sand-muted">
+          <span className="text-[11px] uppercase tracking-wide text-frost-muted">
             {video.source === "modded" ? "Modded" : "RP Server"}
           </span>
         )}
@@ -64,7 +64,7 @@ export default function VideoCard({ video }: { video: Video }) {
       <div className="mt-2 flex items-center justify-between">
         <Link
           href={`/profile/${video.profiles?.username ?? ""}`}
-          className="flex items-center gap-2 text-sm text-sand-muted hover:text-sand"
+          className="flex items-center gap-2 text-sm text-frost-muted hover:text-frost"
         >
           {/* M9 fix: avatar_url was fetched but never rendered — was
               always a blank div. */}
@@ -76,23 +76,23 @@ export default function VideoCard({ video }: { video: Video }) {
               className="h-6 w-6 rounded-full object-cover"
             />
           ) : (
-            <div className="h-6 w-6 rounded-full bg-asphalt-line" />
+            <div className="h-6 w-6 rounded-full bg-ink-line" />
           )}
           <span>@{video.profiles?.username ?? "unknown"}</span>
           {video.profiles?.is_verified && <VerifiedBadge />}
           {video.profiles?.wanted_level ? <WantedStars level={video.profiles.wanted_level} /> : null}
         </Link>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-sand-muted">{video.view_count.toLocaleString()} views</span>
+          <span className="text-xs text-frost-muted">{video.view_count.toLocaleString()} views</span>
           <Link
             href={`/watch/${video.id}`}
-            className="rounded border border-asphalt-line px-2 py-1 text-[11px] font-display uppercase text-sand-muted hover:text-sand"
+            className="rounded border border-ink-line px-2 py-1 text-[11px] font-display uppercase text-frost-muted hover:text-frost"
           >
             Share
           </Link>
           <button
             onClick={() => setShowTip(true)}
-            className="rounded bg-gradient-to-r from-sunset-amber to-sunset-magenta px-2 py-1 text-[11px] font-display font-bold uppercase text-asphalt"
+            className="rounded bg-gradient-to-r from-neon-pink to-neon-violet px-2 py-1 text-[11px] font-display font-bold uppercase text-ink"
           >
             Tip
           </button>

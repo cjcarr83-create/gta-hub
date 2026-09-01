@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { Oswald, Inter } from "next/font/google";
+import { Oswald, Inter, Permanent_Marker } from "next/font/google";
 import BottomNav from "@/components/BottomNav";
 import "@/styles/globals.css";
 
-// Display face: condensed, bold, stencil-adjacent — evokes highway
-// signage and licence plates rather than a generic gaming-app font.
+// Display face: condensed, bold — headers and nav labels.
 const oswald = Oswald({
   subsets: ["latin"],
   weight: ["500", "700"],
@@ -14,6 +13,16 @@ const oswald = Oswald({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
+});
+
+// Brush-marker script — reserved for the "HUB" half of the brand
+// wordmark only (see components/Logo.tsx). Not a general display face;
+// mixing it into body headers would fight with `display` everywhere
+// else, so it's scoped to the literal logotype.
+const permanentMarker = Permanent_Marker({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-script",
 });
 
 export const metadata: Metadata = {
@@ -33,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${oswald.variable} ${inter.variable}`}>
+    <html lang="en" className={`${oswald.variable} ${inter.variable} ${permanentMarker.variable}`}>
       <body>
         <div className="mx-auto max-w-lg pb-20">{children}</div>
         <BottomNav />

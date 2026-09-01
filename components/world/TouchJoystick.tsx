@@ -82,14 +82,14 @@ export default function TouchJoystick({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className="relative h-24 w-24 select-none rounded-full border border-asphalt-line bg-black/40 backdrop-blur-sm"
+      className="relative h-24 w-24 select-none rounded-full border border-ink-line bg-black/40 backdrop-blur-sm"
       style={{ touchAction: "none" }}
       aria-label="Move — drag to walk around The Block"
     >
       <div
         ref={knobRef}
         className="pointer-events-none absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2
-                   rounded-full bg-gradient-to-br from-sunset-amber to-sunset-magenta shadow-lg"
+                   rounded-full bg-gradient-to-br from-neon-pink to-neon-violet shadow-lg"
       />
     </div>
   );

@@ -23,8 +23,8 @@ export default function WantedStars({
           key={i}
           className={
             i < clamped
-              ? "bg-gradient-to-br from-sunset-amber to-sunset-magenta bg-clip-text text-transparent"
-              : "text-asphalt-line"
+              ? "bg-gradient-to-br from-neon-pink to-neon-violet bg-clip-text text-transparent"
+              : "text-ink-line"
           }
           aria-hidden="true"
         >

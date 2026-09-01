@@ -16,7 +16,7 @@ export default function PoweredByVantra({
       href={VANTRA_STUDIOS_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className={`text-xs text-sand-muted hover:text-sand transition-colors ${className}`}
+      className={`text-xs text-frost-muted hover:text-frost transition-colors ${className}`}
     >
       Powered by Vantra Studios
     </a>

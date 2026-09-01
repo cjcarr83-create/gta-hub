@@ -37,20 +37,20 @@ export default async function WorldLeaderboard() {
 
   return (
     <div className="card mt-4">
-      <h2 className="mb-2 text-sm uppercase tracking-wide text-sand-muted">
+      <h2 className="mb-2 text-sm uppercase tracking-wide text-frost-muted">
         Recent top scrappers
       </h2>
       <div className="space-y-1 text-sm">
         {top.map((row, i) => (
           <div key={row.username} className="flex items-center justify-between">
             <span>
-              <span className="text-sand-muted">#{i + 1}</span> @{row.username}
+              <span className="text-frost-muted">#{i + 1}</span> @{row.username}
             </span>
-            <span className="text-sunset-amber">{row.kos} KO{row.kos === 1 ? "" : "s"}</span>
+            <span className="text-neon-pink">{row.kos} KO{row.kos === 1 ? "" : "s"}</span>
           </div>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-sand-muted">
+      <p className="mt-2 text-[11px] text-frost-muted">
         Based on the last 200 fights — for bragging rights, not an
         audited ranking.
       </p>

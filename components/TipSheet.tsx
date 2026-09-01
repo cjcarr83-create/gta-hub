@@ -47,10 +47,10 @@ export default function TipSheet({
       aria-modal="true"
       aria-label="Send a tip"
     >
-      <div className="w-full rounded-t-lg border-t border-asphalt-line bg-asphalt-panel p-4 pb-8">
+      <div className="w-full rounded-t-lg border-t border-ink-line bg-ink-panel p-4 pb-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg">Send a tip</h2>
-          <button onClick={onClose} className="text-sand-muted hover:text-sand" aria-label="Close">
+          <button onClick={onClose} className="text-frost-muted hover:text-frost" aria-label="Close">
             ✕
           </button>
         </div>
@@ -148,7 +148,7 @@ function AmountStep({
               setCustomAmount("");
             }}
             className={`rounded border py-2 text-sm font-display
-              ${amountCents === cents && !customAmount ? "border-sunset-amber text-sunset-amber" : "border-asphalt-line text-sand-muted"}`}
+              ${amountCents === cents && !customAmount ? "border-neon-pink text-neon-pink" : "border-ink-line text-frost-muted"}`}
           >
             ${(cents / 100).toFixed(0)}
           </button>
@@ -161,7 +161,7 @@ function AmountStep({
         placeholder="Custom amount"
         value={customAmount}
         onChange={(e) => setCustomAmount(e.target.value)}
-        className="mb-3 w-full rounded border border-asphalt-line bg-asphalt px-3 py-2 text-sand"
+        className="mb-3 w-full rounded border border-ink-line bg-ink px-3 py-2 text-frost"
       />
 
       <input
@@ -170,7 +170,7 @@ function AmountStep({
         maxLength={200}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        className="mb-4 w-full rounded border border-asphalt-line bg-asphalt px-3 py-2 text-sand"
+        className="mb-4 w-full rounded border border-ink-line bg-ink px-3 py-2 text-frost"
       />
 
       {errorMsg && <p className="mb-3 text-sm text-blood">{errorMsg}</p>}
@@ -223,7 +223,7 @@ function ConfirmStep({ amountCents, onDone }: { amountCents: number; onDone: () 
   if (status === "succeeded") {
     return (
       <div className="py-6 text-center">
-        <p className="text-lg text-palm-teal">Tip sent — ${(amountCents / 100).toFixed(2)}</p>
+        <p className="text-lg text-live-cyan">Tip sent — ${(amountCents / 100).toFixed(2)}</p>
       </div>
     );
   }

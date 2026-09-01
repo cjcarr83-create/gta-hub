@@ -25,7 +25,7 @@ export default function ControllerPicker({
 
   return (
     <div className="mb-3 flex items-center gap-2 text-xs">
-      <span className="text-sand-muted">Controls:</span>
+      <span className="text-frost-muted">Controls:</span>
       {(Object.keys(CONTROLLER_SCHEMES) as ControllerScheme[]).map((id) => (
         <button
           key={id}
@@ -33,7 +33,7 @@ export default function ControllerPicker({
           disabled={saving}
           title={CONTROLLER_SCHEMES[id].description}
           className={`rounded-sm border px-2 py-1 ${
-            value === id ? "border-sunset-amber text-sunset-amber" : "border-asphalt-line text-sand-muted"
+            value === id ? "border-neon-pink text-neon-pink" : "border-ink-line text-frost-muted"
           }`}
         >
           {CONTROLLER_SCHEMES[id].label}

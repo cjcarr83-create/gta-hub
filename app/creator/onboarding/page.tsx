@@ -27,7 +27,7 @@ export default function CreatorOnboardingPage() {
     <main className="px-4 pt-6">
       <h1 className="mb-6 text-2xl">Set up payouts</h1>
       <div className="card space-y-4">
-        <p className="text-sm text-sand-muted">
+        <p className="text-sm text-frost-muted">
           GTAHUB uses Stripe to pay creators — your bank details and identity
           verification happen on Stripe&apos;s own secure page, not in this app.
           Takes a few minutes.

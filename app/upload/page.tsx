@@ -69,35 +69,35 @@ export default function UploadPage() {
 
       <div className="card space-y-4">
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Title</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={100}
-            className="w-full rounded border border-asphalt-line bg-asphalt px-3 py-2"
+            className="w-full rounded border border-ink-line bg-ink px-3 py-2"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Description</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={1000}
             rows={3}
-            className="w-full rounded border border-asphalt-line bg-asphalt px-3 py-2"
+            className="w-full rounded border border-ink-line bg-ink px-3 py-2"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Category</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Category</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
               <button
                 key={c}
                 onClick={() => setCategory(c)}
                 className={`rounded-sm border px-3 py-1 text-xs uppercase tracking-wide
-                  ${category === c ? "border-sunset-amber text-sunset-amber" : "border-asphalt-line text-sand-muted"}`}
+                  ${category === c ? "border-neon-pink text-neon-pink" : "border-ink-line text-frost-muted"}`}
               >
                 {c}
               </button>
@@ -106,14 +106,14 @@ export default function UploadPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Source</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Source</label>
           <div className="flex gap-2">
             {(["vanilla", "modded", "rp_server"] as ContentSource[]).map((s) => (
               <button
                 key={s}
                 onClick={() => setSource(s)}
                 className={`rounded-sm border px-3 py-1 text-xs uppercase tracking-wide
-                  ${source === s ? "border-sunset-amber text-sunset-amber" : "border-asphalt-line text-sand-muted"}`}
+                  ${source === s ? "border-neon-pink text-neon-pink" : "border-ink-line text-frost-muted"}`}
               >
                 {s === "rp_server" ? "RP Server" : s}
               </button>
@@ -122,7 +122,7 @@ export default function UploadPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Video file</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Video file</label>
           <input
             type="file"
             accept="video/*"

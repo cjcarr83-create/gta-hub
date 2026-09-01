@@ -51,7 +51,7 @@ export default function ShareSheet({
 
   return (
     <div className="card">
-      <h2 className="mb-3 text-sm uppercase tracking-wide text-sand-muted">Share</h2>
+      <h2 className="mb-3 text-sm uppercase tracking-wide text-frost-muted">Share</h2>
 
       <div className="space-y-2">
         {canNativeShare && (
@@ -73,7 +73,7 @@ export default function ShareSheet({
           only reliable paths are the native share sheet above (on
           mobile, if the person taps "Share…" and picks Instagram) or
           copying the link and pasting it into a Story/DM/bio manually. */}
-      <p className="mt-3 text-xs text-sand-muted">
+      <p className="mt-3 text-xs text-frost-muted">
         For Instagram: use &quot;Share…&quot; on mobile and pick Instagram, or copy
         the link and paste it into a Story or DM — Instagram doesn&apos;t support
         direct link-sharing from the web the way Facebook does.

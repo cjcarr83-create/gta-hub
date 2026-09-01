@@ -80,7 +80,7 @@ export default async function WatchPage({
         {video.processing_status === "ready" && video.playback_id ? (
           <WatchPlayer videoId={video.id} playbackId={video.playback_id} thumbnailUrl={video.thumbnail_url} />
         ) : (
-          <div className="flex aspect-video items-center justify-center text-sand-muted">
+          <div className="flex aspect-video items-center justify-center text-frost-muted">
             Processing…
           </div>
         )}
@@ -90,7 +90,7 @@ export default async function WatchPage({
         <CategoryBadge category={video.category} />
       </div>
       <h1 className="mb-1 text-lg">{video.title}</h1>
-      <p className="mb-4 text-sm text-sand-muted">
+      <p className="mb-4 text-sm text-frost-muted">
         @{(video.profiles as unknown as { username: string } | null)?.username ?? "unknown"} ·{" "}
         {video.view_count.toLocaleString()} views
       </p>

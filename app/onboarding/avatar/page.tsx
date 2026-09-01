@@ -76,7 +76,7 @@ function TraitPicker<T extends string>({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-xs uppercase text-sand-muted">{label}</label>
+      <label className="mb-1 block text-xs uppercase text-frost-muted">{label}</label>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => (
           <button
@@ -84,7 +84,7 @@ function TraitPicker<T extends string>({
             type="button"
             onClick={() => onChange(opt)}
             className={`rounded-sm border px-3 py-1 text-xs
-              ${value === opt ? "border-sunset-amber text-sunset-amber" : "border-asphalt-line text-sand-muted"}`}
+              ${value === opt ? "border-neon-pink text-neon-pink" : "border-ink-line text-frost-muted"}`}
           >
             {LABELS[traitKey]?.[opt] ?? opt}
           </button>
@@ -135,7 +135,7 @@ export default function AvatarOnboardingPage() {
   return (
     <main className="px-4 pt-6 pb-24">
       <h1 className="mb-1 text-2xl">Build your character</h1>
-      <p className="mb-6 text-sm text-sand-muted">
+      <p className="mb-6 text-sm text-frost-muted">
         Pick your look — this becomes your profile picture and your avatar
         in The Block.
       </p>

@@ -104,7 +104,7 @@ export default function WorldRoom({
     <>
       <ControllerPicker userId={userId} value={scheme} onChange={setScheme} />
       {repGain !== null && (
-        <div className="mb-2 rounded-sm border border-sunset-amber bg-black/40 px-3 py-1.5 text-center text-sm text-sunset-amber">
+        <div className="mb-2 rounded-sm border border-neon-pink bg-black/40 px-3 py-1.5 text-center text-sm text-neon-pink">
           +{repGain} rep
         </div>
       )}
@@ -131,7 +131,7 @@ export default function WorldRoom({
         onAbandon={() => canvasHandleRef.current?.abandonMission()}
       />
       <TurfStatus turfOwners={turfOwners} />
-      <p className="mt-2 text-[11px] text-sand-muted">
+      <p className="mt-2 text-[11px] text-frost-muted">
         {TURF_ZONES.length} turf zones on the map — check the minimap in the corner of The Block.
       </p>
     </>

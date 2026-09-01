@@ -49,12 +49,12 @@ export default function StartLivePage() {
       <main className="px-4 pt-6">
         <h1 className="mb-4 text-2xl">You&apos;re set up</h1>
         <div className="card space-y-3">
-          <p className="text-sm text-sand-muted">
+          <p className="text-sm text-frost-muted">
             Paste this stream key into OBS (or your broadcast software) as
             the RTMP key. Your stream goes live on GTAHUB automatically
             once you start broadcasting.
           </p>
-          <div className="rounded border border-asphalt-line bg-asphalt p-3 font-mono text-xs break-all">
+          <div className="rounded border border-ink-line bg-ink p-3 font-mono text-xs break-all">
             {streamKey}
           </div>
           <p className="text-xs text-blood">
@@ -73,23 +73,23 @@ export default function StartLivePage() {
       <h1 className="mb-6 text-2xl">Go live</h1>
       <div className="card space-y-4">
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Title</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={100}
-            className="w-full rounded border border-asphalt-line bg-asphalt px-3 py-2"
+            className="w-full rounded border border-ink-line bg-ink px-3 py-2"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs uppercase text-sand-muted">Category</label>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Category</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
               <button
                 key={c}
                 onClick={() => setCategory(c)}
                 className={`rounded-sm border px-3 py-1 text-xs uppercase tracking-wide
-                  ${category === c ? "border-sunset-amber text-sunset-amber" : "border-asphalt-line text-sand-muted"}`}
+                  ${category === c ? "border-neon-pink text-neon-pink" : "border-ink-line text-frost-muted"}`}
               >
                 {c}
               </button>

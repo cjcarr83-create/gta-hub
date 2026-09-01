@@ -89,8 +89,8 @@ export default function CrewDetailPage({
     setMembers((prev) => prev.filter((m) => m.id !== currentUserId));
   }
 
-  if (loading) return <main className="px-4 pt-6 text-sand-muted">Loading…</main>;
-  if (!crew) return <main className="px-4 pt-6 text-sand-muted">Crew not found.</main>;
+  if (loading) return <main className="px-4 pt-6 text-frost-muted">Loading…</main>;
+  if (!crew) return <main className="px-4 pt-6 text-frost-muted">Crew not found.</main>;
 
   const isMember = members.some((m) => m.id === currentUserId);
 
@@ -102,8 +102,8 @@ export default function CrewDetailPage({
           style={{ borderColor: crew.color_hex ?? "#F2A93B" }}
         />
         <h1 className="text-xl">{crew.name}</h1>
-        {crew.motto && <p className="mt-1 text-sm text-sand-muted">{crew.motto}</p>}
-        <p className="mt-2 text-xs text-sand-muted">{members.length} members</p>
+        {crew.motto && <p className="mt-1 text-sm text-frost-muted">{crew.motto}</p>}
+        <p className="mt-2 text-xs text-frost-muted">{members.length} members</p>
 
         {currentUserId && crew.recruitment_status === "open" && (
           <button onClick={isMember ? handleLeave : handleJoin} className="btn-primary mt-3 w-full">
@@ -119,7 +119,7 @@ export default function CrewDetailPage({
       <div className="space-y-2">
         {members.map((m) => (
           <div key={m.id} className="card flex items-center gap-3 py-2">
-            <div className="h-9 w-9 rounded-full bg-asphalt-line" />
+            <div className="h-9 w-9 rounded-full bg-ink-line" />
             <span className="text-sm">@{m.username ?? "unknown"}</span>
           </div>
         ))}

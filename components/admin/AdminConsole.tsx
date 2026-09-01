@@ -20,20 +20,20 @@ export default function AdminConsole() {
   return (
     <main className="mx-auto max-w-2xl px-4 pt-6 pb-24">
       <h1 className="mb-1 text-2xl">Admin Console</h1>
-      <p className="mb-6 text-sm text-sand-muted">
+      <p className="mb-6 text-sm text-frost-muted">
         Only visible to platform admins. Every action here is logged.
       </p>
 
-      <div className="mb-6 flex gap-2 border-b border-asphalt-line">
+      <div className="mb-6 flex gap-2 border-b border-ink-line">
         <button
           onClick={() => setTab("users")}
-          className={`px-3 py-2 text-sm ${tab === "users" ? "border-b-2 border-sunset-amber text-sand" : "text-sand-muted"}`}
+          className={`px-3 py-2 text-sm ${tab === "users" ? "border-b-2 border-neon-pink text-frost" : "text-frost-muted"}`}
         >
           Users
         </button>
         <button
           onClick={() => setTab("youtube")}
-          className={`px-3 py-2 text-sm ${tab === "youtube" ? "border-b-2 border-sunset-amber text-sand" : "text-sand-muted"}`}
+          className={`px-3 py-2 text-sm ${tab === "youtube" ? "border-b-2 border-neon-pink text-frost" : "text-frost-muted"}`}
         >
           YouTube
         </button>
@@ -92,7 +92,7 @@ function UserModerationPanel() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           placeholder="Search by username"
-          className="flex-1 rounded border border-asphalt-line bg-asphalt px-3 py-2 text-sand"
+          className="flex-1 rounded border border-ink-line bg-ink px-3 py-2 text-frost"
         />
         <button onClick={handleSearch} className="btn-secondary">
           {loading ? "…" : "Search"}
@@ -108,10 +108,10 @@ function UserModerationPanel() {
               <span
                 className={`ml-auto rounded-sm px-2 py-0.5 text-[10px] uppercase tracking-wide ${
                   u.account_state === "active"
-                    ? "text-palm-teal"
+                    ? "text-live-cyan"
                     : u.account_state === "banned"
-                    ? "bg-blood text-sand"
-                    : "text-sunset-amber"
+                    ? "bg-blood text-frost"
+                    : "text-neon-pink"
                 }`}
               >
                 {u.account_state}
@@ -149,7 +149,7 @@ function UserModerationPanel() {
           </div>
         ))}
         {users.length === 0 && query.length >= 2 && !loading && (
-          <p className="text-sm text-sand-muted">No users found.</p>
+          <p className="text-sm text-frost-muted">No users found.</p>
         )}
       </div>
     </div>
@@ -182,7 +182,7 @@ function YouTubePanel() {
 
   return (
     <div className="card space-y-3">
-      <p className="text-sm text-sand-muted">
+      <p className="text-sm text-frost-muted">
         Pulls videos from YouTube via the official Data API and stores them
         as embeds (title, thumbnail, video id) — GTAHUB never downloads or
         re-hosts the actual video file. Playback stays on YouTube&apos;s
@@ -191,13 +191,13 @@ function YouTubePanel() {
       <input
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full rounded border border-asphalt-line bg-asphalt px-3 py-2 text-sand"
+        className="w-full rounded border border-ink-line bg-ink px-3 py-2 text-frost"
         placeholder="Search term, e.g. 'GTA 6 trailer'"
       />
       <button onClick={handleSync} disabled={status === "syncing"} className="btn-primary w-full disabled:opacity-50">
         {status === "syncing" ? "Syncing…" : "Sync from YouTube"}
       </button>
-      {message && <p className="text-sm text-sand-muted">{message}</p>}
+      {message && <p className="text-sm text-frost-muted">{message}</p>}
     </div>
   );
 }

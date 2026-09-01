@@ -9,7 +9,7 @@ export default function TurfStatus({
 }) {
   return (
     <div className="card mt-4">
-      <h2 className="mb-2 text-sm uppercase tracking-wide text-sand-muted">Turf</h2>
+      <h2 className="mb-2 text-sm uppercase tracking-wide text-frost-muted">Turf</h2>
       <div className="space-y-1 text-sm">
         {TURF_ZONES.map((z) => {
           const owner = turfOwners.get(z.id);
@@ -19,13 +19,13 @@ export default function TurfStatus({
               {owner ? (
                 <span style={{ color: owner.color ?? undefined }}>{owner.crewName ?? "Unclaimed crew"}</span>
               ) : (
-                <span className="text-sand-muted">Unclaimed</span>
+                <span className="text-frost-muted">Unclaimed</span>
               )}
             </div>
           );
         })}
       </div>
-      <p className="mt-2 text-[11px] text-sand-muted">
+      <p className="mt-2 text-[11px] text-frost-muted">
         Stand in a zone with your crew uncontested for 20s to capture it.
       </p>
     </div>

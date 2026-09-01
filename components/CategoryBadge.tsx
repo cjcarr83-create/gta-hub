@@ -17,8 +17,8 @@ export default function CategoryBadge({
 }) {
   return (
     <span
-      className="inline-block rounded-sm border border-asphalt-line bg-asphalt-panel
-                 px-2 py-0.5 text-[11px] font-display uppercase tracking-wide text-sand-muted"
+      className="inline-block rounded-sm border border-ink-line bg-ink-panel
+                 px-2 py-0.5 text-[11px] font-display uppercase tracking-wide text-frost-muted"
     >
       {LABELS[category]}
     </span>

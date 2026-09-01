@@ -19,12 +19,12 @@ export default function AboutPage() {
       <h1 className="mb-6 text-2xl">About GTAHUB</h1>
 
       <div className="card mb-4 space-y-3">
-        <p className="text-sm text-sand-muted">
+        <p className="text-sm text-frost-muted">
           GTAHUB is a gaming community platform — clips, live streams,
           crews, profiles, and discovery, built around watching, sharing,
           connecting, and going live.
         </p>
-        <p className="text-sm text-sand-muted">
+        <p className="text-sm text-frost-muted">
           GTAHUB is an independent, fan-made platform. It is not affiliated
           with, endorsed by, or sponsored by Rockstar Games or Take-Two
           Interactive.
@@ -32,7 +32,7 @@ export default function AboutPage() {
       </div>
 
       <div className="card mb-4">
-        <h2 className="mb-2 text-sm uppercase tracking-wide text-sand-muted">
+        <h2 className="mb-2 text-sm uppercase tracking-wide text-frost-muted">
           Built by
         </h2>
         <p className="mb-3 text-sm">
@@ -41,7 +41,7 @@ export default function AboutPage() {
             href={VANTRA_STUDIOS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sunset-amber hover:underline"
+            className="text-neon-pink hover:underline"
           >
             Vantra Studios
           </a>
@@ -50,7 +50,7 @@ export default function AboutPage() {
         <PoweredByVantra />
       </div>
 
-      <Link href="/" className="text-sm text-sand-muted hover:text-sand">
+      <Link href="/" className="text-sm text-frost-muted hover:text-frost">
         ← Back to GTAHUB
       </Link>
     </main>

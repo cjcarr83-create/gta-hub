@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/config";
 
 // H7 fix (Round 2 audit): Round 1's lib/supabase/server.ts had a comment
 // saying cookie writes were "safe to ignore if you have middleware
@@ -13,8 +14,8 @@ export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { MeshReflectorMaterial, Stars } from "@react-three/drei";
+import { MeshReflectorMaterial, RoundedBox, Stars } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette, N8AO } from "@react-three/postprocessing";
 import * as THREE from "three";
 
@@ -207,21 +207,54 @@ function Car({
   color?: string;
 }) {
   const wheelPositions: [number, number, number][] = [
-    [-0.55, 0.25, 0.8],
-    [0.55, 0.25, 0.8],
-    [-0.55, 0.25, -0.8],
-    [0.55, 0.25, -0.8],
+    [-0.58, 0.25, 0.8],
+    [0.58, 0.25, 0.8],
+    [-0.58, 0.25, -0.8],
+    [0.58, 0.25, -0.8],
   ];
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
-      <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.1, 0.5, 2.4]} />
-        <meshStandardMaterial color={color} roughness={0.35} metalness={0.4} />
+      {/* Body and cabin use rounded panels (chamfered edges) instead of
+          sharp boxes — the single biggest cheap win against a
+          "cardboard box car" look without an actual modeled mesh. */}
+      <RoundedBox args={[1.1, 0.5, 2.4]} radius={0.12} smoothness={4} position={[0, 0.35, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.5} />
+      </RoundedBox>
+      <RoundedBox args={[0.9, 0.42, 1.15]} radius={0.1} smoothness={4} position={[0, 0.76, -0.2]} castShadow>
+        <meshStandardMaterial color={color} roughness={0.15} metalness={0.6} />
+      </RoundedBox>
+      {/* window glass */}
+      <mesh position={[0.451, 0.78, -0.2]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[1.0, 0.32]} />
+        <meshStandardMaterial color="#0B1526" roughness={0.15} metalness={0.7} transparent opacity={0.85} />
       </mesh>
-      <mesh position={[0, 0.75, -0.2]} castShadow>
-        <boxGeometry args={[0.9, 0.4, 1.1]} />
-        <meshStandardMaterial color={color} roughness={0.2} metalness={0.5} />
+      <mesh position={[-0.451, 0.78, -0.2]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[1.0, 0.32]} />
+        <meshStandardMaterial color="#0B1526" roughness={0.15} metalness={0.7} transparent opacity={0.85} />
       </mesh>
+      {/* side mirrors */}
+      <mesh position={[0.58, 0.62, 0.5]} castShadow>
+        <boxGeometry args={[0.1, 0.08, 0.14]} />
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.5} />
+      </mesh>
+      <mesh position={[-0.58, 0.62, 0.5]} castShadow>
+        <boxGeometry args={[0.1, 0.08, 0.14]} />
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.5} />
+      </mesh>
+      {/* rear spoiler */}
+      <mesh position={[0, 0.72, -1.18]} castShadow>
+        <boxGeometry args={[0.85, 0.04, 0.2]} />
+        <meshStandardMaterial color="#0B0712" roughness={0.4} metalness={0.4} />
+      </mesh>
+      <mesh position={[0.3, 0.6, -1.18]}>
+        <boxGeometry args={[0.04, 0.24, 0.04]} />
+        <meshStandardMaterial color="#0B0712" roughness={0.4} />
+      </mesh>
+      <mesh position={[-0.3, 0.6, -1.18]}>
+        <boxGeometry args={[0.04, 0.24, 0.04]} />
+        <meshStandardMaterial color="#0B0712" roughness={0.4} />
+      </mesh>
+      {/* headlights / taillights */}
       <mesh position={[0.35, 0.4, 1.19]}>
         <boxGeometry args={[0.2, 0.12, 0.05]} />
         <meshStandardMaterial color="#FFF7D6" emissive="#FFF7D6" emissiveIntensity={1.4} toneMapped={false} />
@@ -238,11 +271,27 @@ function Car({
         <boxGeometry args={[0.2, 0.12, 0.05]} />
         <meshStandardMaterial color="#FF2E44" emissive="#FF2E44" emissiveIntensity={1.4} toneMapped={false} />
       </mesh>
+      {/* front grille */}
+      <mesh position={[0, 0.28, 1.2]}>
+        <boxGeometry args={[0.7, 0.1, 0.03]} />
+        <meshStandardMaterial color="#0B0712" roughness={0.6} metalness={0.3} />
+      </mesh>
+      {/* two-tone wheels: dark tire + lighter rim disc */}
       {wheelPositions.map((p, i) => (
-        <mesh key={i} position={p} rotation={[0, 0, Math.PI / 2]} castShadow>
-          <cylinderGeometry args={[0.28, 0.28, 0.22, 12]} />
-          <meshStandardMaterial color="#0B0712" roughness={0.9} />
-        </mesh>
+        <group key={i} position={p} rotation={[0, 0, Math.PI / 2]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.28, 0.28, 0.22, 16]} />
+            <meshStandardMaterial color="#0B0712" roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 0.115, 0]}>
+            <cylinderGeometry args={[0.16, 0.16, 0.01, 16]} />
+            <meshStandardMaterial color="#B8B4C4" roughness={0.4} metalness={0.7} />
+          </mesh>
+          <mesh position={[0, -0.115, 0]}>
+            <cylinderGeometry args={[0.16, 0.16, 0.01, 16]} />
+            <meshStandardMaterial color="#B8B4C4" roughness={0.4} metalness={0.7} />
+          </mesh>
+        </group>
       ))}
     </group>
   );
@@ -389,41 +438,72 @@ function PlayerRig() {
 
   return (
     <group ref={playerGroup}>
-      {/* torso */}
-      <mesh position={[0, 1.0, 0]} castShadow>
-        <boxGeometry args={[0.5, 0.7, 0.3]} />
+      {/* torso — rounded panel + a narrower waist block for a slight
+          taper instead of a single flat slab */}
+      <RoundedBox args={[0.5, 0.55, 0.3]} radius={0.08} smoothness={4} position={[0, 1.12, 0]} castShadow>
         <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+      </RoundedBox>
+      <RoundedBox args={[0.4, 0.25, 0.26]} radius={0.06} smoothness={4} position={[0, 0.8, 0]} castShadow>
+        <meshStandardMaterial color="#170F26" roughness={0.6} />
+      </RoundedBox>
+      {/* neck */}
+      <mesh position={[0, 1.42, 0]} castShadow>
+        <cylinderGeometry args={[0.08, 0.09, 0.1, 8]} />
+        <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
       </mesh>
-      {/* head */}
-      <mesh position={[0, 1.55, 0]} castShadow>
-        <sphereGeometry args={[0.22, 16, 16]} />
-        <meshStandardMaterial color="#F5F1FA" roughness={0.6} />
+      {/* head + hair cap + simple eyes */}
+      <mesh position={[0, 1.58, 0]} castShadow>
+        <sphereGeometry args={[0.2, 20, 20]} />
+        <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
       </mesh>
-      {/* legs — each a group pivoted at the hip so rotation swings
-          like a real limb instead of spinning around its own middle */}
-      <group ref={leftLeg} position={[-0.15, 0.65, 0]}>
-        <mesh position={[0, -0.325, 0]} castShadow>
-          <boxGeometry args={[0.18, 0.65, 0.18]} />
+      <mesh position={[0, 1.66, -0.02]} castShadow>
+        <sphereGeometry args={[0.205, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+        <meshStandardMaterial color="#170F26" roughness={0.7} />
+      </mesh>
+      <mesh position={[0.08, 1.58, 0.18]}>
+        <sphereGeometry args={[0.025, 8, 8]} />
+        <meshStandardMaterial color="#0B0712" />
+      </mesh>
+      <mesh position={[-0.08, 1.58, 0.18]}>
+        <sphereGeometry args={[0.025, 8, 8]} />
+        <meshStandardMaterial color="#0B0712" />
+      </mesh>
+      {/* legs — each a group pivoted at the hip so rotation swings like
+          a real limb instead of spinning around its own middle; a
+          rounded shoe caps each foot */}
+      <group ref={leftLeg} position={[-0.13, 0.68, 0]}>
+        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
           <meshStandardMaterial color="#170F26" roughness={0.6} />
-        </mesh>
+        </RoundedBox>
+        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
+          <meshStandardMaterial color="#0B0712" roughness={0.5} />
+        </RoundedBox>
       </group>
-      <group ref={rightLeg} position={[0.15, 0.65, 0]}>
-        <mesh position={[0, -0.325, 0]} castShadow>
-          <boxGeometry args={[0.18, 0.65, 0.18]} />
+      <group ref={rightLeg} position={[0.13, 0.68, 0]}>
+        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
           <meshStandardMaterial color="#170F26" roughness={0.6} />
+        </RoundedBox>
+        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
+          <meshStandardMaterial color="#0B0712" roughness={0.5} />
+        </RoundedBox>
+      </group>
+      {/* arms — pivoted at the shoulder, with a rounded hand at the end */}
+      <group ref={leftArm} position={[-0.33, 1.32, 0]}>
+        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
+          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </RoundedBox>
+        <mesh position={[0, -0.52, 0]} castShadow>
+          <sphereGeometry args={[0.08, 12, 12]} />
+          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
         </mesh>
       </group>
-      {/* arms — pivoted at the shoulder */}
-      <group ref={leftArm} position={[-0.35, 1.3, 0]}>
-        <mesh position={[0, -0.275, 0]} castShadow>
-          <boxGeometry args={[0.15, 0.55, 0.15]} />
+      <group ref={rightArm} position={[0.33, 1.32, 0]}>
+        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
           <meshStandardMaterial color="#FF2E93" roughness={0.5} />
-        </mesh>
-      </group>
-      <group ref={rightArm} position={[0.35, 1.3, 0]}>
-        <mesh position={[0, -0.275, 0]} castShadow>
-          <boxGeometry args={[0.15, 0.55, 0.15]} />
-          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </RoundedBox>
+        <mesh position={[0, -0.52, 0]} castShadow>
+          <sphereGeometry args={[0.08, 12, 12]} />
+          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
         </mesh>
       </group>
       <pointLight position={[0, 2.0, 0]} color="#FF2E93" intensity={0.4} distance={3} decay={2} />

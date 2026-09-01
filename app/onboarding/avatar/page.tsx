@@ -95,6 +95,16 @@ function TraitPicker<T extends string>({
   );
 }
 
+// Instant, zero-cost stand-ins for testing the app end-to-end (signup,
+// The Block, leaderboards, etc.) before real AI-generated portraits are
+// wired up (see lib/avatarGen.ts — needs AVATAR_PROVIDER_API_KEY).
+// Plain original SVG shapes, not meant as a finished look.
+const PLACEHOLDER_AVATARS = [
+  "/avatars/placeholder-1.svg",
+  "/avatars/placeholder-2.svg",
+  "/avatars/placeholder-3.svg",
+];
+
 export default function AvatarOnboardingPage() {
   const router = useRouter();
   const [style, setStyle] = useState<AvatarStyle>({
@@ -106,12 +116,39 @@ export default function AvatarOnboardingPage() {
     vibe: "chill",
   });
   const [displayName, setDisplayName] = useState("");
-  const [status, setStatus] = useState<"idle" | "generating" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "generating" | "saving" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [resultUrl, setResultUrl] = useState<string | null>(null);
 
   function set<K extends keyof AvatarStyle>(key: K, value: AvatarStyle[K]) {
     setStyle((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleUsePlaceholder(url: string) {
+    setStatus("saving");
+    setErrorMsg("");
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sign in required.");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: url,
+          ...(displayName.trim() ? { display_name: displayName.trim().slice(0, 40) } : {}),
+        })
+        .eq("id", user.id);
+      if (error) throw new Error(error.message);
+
+      setResultUrl(url);
+      setStatus("idle");
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(err instanceof Error ? err.message : "Could not set placeholder.");
+    }
   }
 
   async function handleGenerate() {
@@ -184,6 +221,30 @@ export default function AvatarOnboardingPage() {
         </button>
       )}
 
+      <div className="card mb-4 space-y-3">
+        <div>
+          <p className="text-sm">Testing right now?</p>
+          <p className="text-xs text-frost-muted">
+            AI portraits aren&apos;t live yet — grab a placeholder to skip straight to The Block.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          {PLACEHOLDER_AVATARS.map((url) => (
+            <button
+              key={url}
+              type="button"
+              onClick={() => handleUsePlaceholder(url)}
+              disabled={status === "saving" || status === "generating"}
+              className={`h-16 w-16 overflow-hidden rounded-full border-2 transition-colors disabled:opacity-50
+                ${resultUrl === url ? "border-neon-pink" : "border-ink-line hover:border-neon-violet"}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="Placeholder character" className="h-full w-full" />
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="card space-y-4">
         <div>
           <label className="mb-1 block text-xs uppercase text-frost-muted">Profile name</label>
@@ -208,7 +269,7 @@ export default function AvatarOnboardingPage() {
 
         <button
           onClick={handleGenerate}
-          disabled={status === "generating"}
+          disabled={status === "generating" || status === "saving"}
           className="btn-primary w-full disabled:opacity-50"
         >
           {status === "generating" ? "Generating…" : resultUrl ? "Regenerate" : "Generate my character"}

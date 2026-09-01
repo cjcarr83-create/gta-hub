@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     .update({ avatar_generation_status: "pending" })
     .eq("id", user.id);
 
-  const result = await generateAvatarImage(style as AvatarStyle);
+  const result = await generateAvatarImage(style as AvatarStyle, user.id);
 
   if (!result.ok) {
     await trusted

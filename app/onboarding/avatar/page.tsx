@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   SKIN_TONES,
   HAIR_STYLES,
@@ -104,6 +105,7 @@ export default function AvatarOnboardingPage() {
     accessory: "sunglasses",
     vibe: "chill",
   });
+  const [displayName, setDisplayName] = useState("");
   const [status, setStatus] = useState<"idle" | "generating" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [resultUrl, setResultUrl] = useState<string | null>(null);
@@ -117,6 +119,19 @@ export default function AvatarOnboardingPage() {
     setErrorMsg("");
     setResultUrl(null);
     try {
+      if (displayName.trim()) {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from("profiles")
+            .update({ display_name: displayName.trim().slice(0, 40) })
+            .eq("id", user.id);
+        }
+      }
+
       const res = await fetch("/api/profile/generate-avatar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,27 +149,54 @@ export default function AvatarOnboardingPage() {
 
   return (
     <main className="px-4 pt-6 pb-24">
-      <h1 className="mb-1 text-2xl">Build your character</h1>
+      <h1 className="mb-1 text-2xl">Create your character</h1>
       <p className="mb-6 text-sm text-frost-muted">
-        Pick your look — this becomes your profile picture and your avatar
-        in The Block.
+        Your name and look — this becomes your profile picture and your
+        avatar in The Block.
       </p>
 
-      {resultUrl && (
-        <div className="card mb-4 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={resultUrl}
-            alt="Your generated character"
-            className="mx-auto mb-3 h-32 w-32 rounded-full object-cover"
-          />
-          <button onClick={() => router.push("/profile")} className="btn-primary w-full">
-            Looks good — continue
-          </button>
+      {/* Character card — deliberately echoes a game character-select
+          card (portrait, name plate, trait tags) rather than a plain
+          form, since this screen is the "make your character" moment. */}
+      <div className="card mb-4 overflow-hidden border-neon-violet/30 p-0">
+        <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-neon-pink/10 to-neon-violet/10">
+          {resultUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={resultUrl} alt="Your character" className="h-full w-full object-cover" />
+          ) : (
+            <div className="text-center text-frost-muted">
+              <div className="mx-auto mb-2 h-16 w-16 rounded-full border-2 border-dashed border-ink-line" />
+              <p className="text-xs uppercase tracking-widest">No portrait yet</p>
+            </div>
+          )}
         </div>
+        <div className="p-4">
+          <p className="font-display text-xl uppercase">{displayName || "Your name here"}</p>
+          <p className="text-xs uppercase tracking-widest text-neon-pink">
+            {LABELS.vibe?.[style.vibe] ?? style.vibe}
+          </p>
+        </div>
+      </div>
+
+      {resultUrl && (
+        <button onClick={() => router.push("/profile")} className="btn-primary mb-4 w-full">
+          Looks good — continue
+        </button>
       )}
 
       <div className="card space-y-4">
+        <div>
+          <label className="mb-1 block text-xs uppercase text-frost-muted">Profile name</label>
+          <input
+            type="text"
+            placeholder="How you'll appear around the hub"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            maxLength={40}
+            className="w-full rounded border border-ink-line bg-ink px-3 py-2"
+          />
+        </div>
+
         <TraitPicker label="Skin tone" traitKey="skinTone" options={SKIN_TONES} value={style.skinTone} onChange={(v) => set("skinTone", v)} />
         <TraitPicker label="Hair style" traitKey="hairStyle" options={HAIR_STYLES} value={style.hairStyle} onChange={(v) => set("hairStyle", v)} />
         <TraitPicker label="Hair color" traitKey="hairColor" options={HAIR_COLORS} value={style.hairColor} onChange={(v) => set("hairColor", v)} />

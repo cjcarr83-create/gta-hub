@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+import { MeshReflectorMaterial, Stars } from "@react-three/drei";
+import { EffectComposer, Bloom, Vignette, N8AO } from "@react-three/postprocessing";
 import * as THREE from "three";
 
 // Phase 1 prototype of a real 3D version of The Block — see
@@ -88,6 +89,18 @@ function City() {
     return items;
   }, []);
 
+  const palmTrees = useMemo(() => {
+    const rand = seededRandom(7);
+    const items: [number, number, number][] = [];
+    // Line the outer edge of the grid — a Miami-strip silhouette rather
+    // than scattered randomly through the city blocks.
+    for (let g = -GRID; g <= GRID; g++) {
+      if (rand() > 0.6) items.push([GRID * BLOCK + 3 + rand() * 2, 0, g * BLOCK]);
+      if (rand() > 0.6) items.push([-GRID * BLOCK - 3 - rand() * 2, 0, g * BLOCK]);
+    }
+    return items;
+  }, []);
+
   return (
     <group>
       {buildings.map((b, i) => (
@@ -96,24 +109,7 @@ function City() {
             <boxGeometry args={[b.w, b.h, b.d]} />
             <meshStandardMaterial color={b.color} roughness={0.85} />
           </mesh>
-          {/* Neon "window" strips — a handful of small emissive planes
-              per building rather than a texture, keeps the night-city
-              feel with zero external assets. */}
-          {Array.from({ length: 3 }).map((_, wi) => (
-            <mesh
-              key={wi}
-              position={[b.w / 2 + 0.01, b.h / 2 - 1 - wi * 2, 0]}
-              rotation={[0, Math.PI / 2, 0]}
-            >
-              <planeGeometry args={[b.d * 0.6, 0.4]} />
-              <meshStandardMaterial
-                color={wi % 2 === 0 ? "#FF2E93" : "#22D3EE"}
-                emissive={wi % 2 === 0 ? "#FF2E93" : "#22D3EE"}
-                emissiveIntensity={1.8}
-                toneMapped={false}
-              />
-            </mesh>
-          ))}
+          <BuildingWindows w={b.w} h={b.h} d={b.d} seed={i} />
         </group>
       ))}
       {parkedCars.map((c, i) => (
@@ -121,6 +117,81 @@ function City() {
       ))}
       {streetLights.map((p, i) => (
         <StreetLight key={i} position={p} />
+      ))}
+      {palmTrees.map((p, i) => (
+        <PalmTree key={i} position={p} seed={i} />
+      ))}
+    </group>
+  );
+}
+
+// A real grid of lit/unlit windows on one face per building, instead
+// of a handful of flat strips — reads as an actual building facade
+// rather than a decorated box. Kept to a single face and a capped row
+// count for draw-call/perf sanity (this is still all procedural
+// geometry, no textures).
+function BuildingWindows({ w, h, d, seed }: { w: number; h: number; d: number; seed: number }) {
+  const items = useMemo(() => {
+    const rand = seededRandom(seed * 97 + 13);
+    const rows = Math.min(6, Math.max(2, Math.floor(h / 1.4)));
+    const cols = 3;
+    const cellH = h / (rows + 1);
+    const out: { x: number; y: number; lit: boolean; color: string }[] = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        out.push({
+          x: (c - (cols - 1) / 2) * (d * 0.3),
+          y: -h / 2 + cellH * (r + 1),
+          lit: rand() > 0.55,
+          color: rand() > 0.5 ? "#FF2E93" : "#22D3EE",
+        });
+      }
+    }
+    return { rows, cellH, out };
+  }, [h, d, seed]);
+
+  return (
+    <group position={[w / 2 + 0.01, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+      {items.out.map((win, i) => (
+        <mesh key={i} position={[win.x, win.y, 0]}>
+          <planeGeometry args={[d * 0.18, items.cellH * 0.55]} />
+          <meshStandardMaterial
+            color={win.lit ? win.color : "#1A1428"}
+            emissive={win.lit ? win.color : "#000000"}
+            emissiveIntensity={win.lit ? 1.6 : 0}
+            toneMapped={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function PalmTree({ position, seed }: { position: [number, number, number]; seed: number }) {
+  const rand = useMemo(() => seededRandom(seed * 13 + 5), [seed]);
+  const height = 3 + rand() * 1.5;
+  const lean = (rand() - 0.5) * 0.15;
+  const fronds = useMemo(
+    () => Array.from({ length: 6 }).map((_, i) => (i / 6) * Math.PI * 2 + rand()),
+    [rand]
+  );
+
+  return (
+    <group position={position} rotation={[0, rand() * Math.PI, 0]}>
+      <mesh position={[0, height / 2, 0]} rotation={[0, 0, lean]} castShadow>
+        <cylinderGeometry args={[0.1, 0.16, height, 6]} />
+        <meshStandardMaterial color="#3A2E22" roughness={0.9} />
+      </mesh>
+      {fronds.map((angle, i) => (
+        <mesh
+          key={i}
+          position={[0, height, 0]}
+          rotation={[Math.PI / 5, angle, 0]}
+          castShadow
+        >
+          <coneGeometry args={[0.25, 1.6, 4]} />
+          <meshStandardMaterial color="#1F4A3A" roughness={0.8} />
+        </mesh>
       ))}
     </group>
   );
@@ -193,12 +264,18 @@ function StreetLight({ position }: { position: [number, number, number] }) {
   );
 }
 
+// Wet-asphalt look — a single reflective ground plane (one real-time
+// planar reflection, not one per road strip, for performance) rather
+// than a flat-colored surface. This is what actually gets the
+// rain-slicked, neon-reflected street look from the reference mockups;
+// flat color alone can't fake it. Lane markings are thin emissive
+// planes laid on top.
 function Ground() {
   const roadLines = useMemo(() => {
     const lines: { pos: [number, number, number]; size: [number, number]; vertical: boolean }[] = [];
     for (let g = -GRID; g <= GRID; g += 3) {
-      lines.push({ pos: [g * BLOCK, 0.01, 0], size: [4, GRID * BLOCK * 2 + 8], vertical: true });
-      lines.push({ pos: [0, 0.01, g * BLOCK], size: [GRID * BLOCK * 2 + 8, 4], vertical: false });
+      lines.push({ pos: [g * BLOCK, 0.02, 0], size: [4, GRID * BLOCK * 2 + 8], vertical: true });
+      lines.push({ pos: [0, 0.02, g * BLOCK], size: [GRID * BLOCK * 2 + 8, 4], vertical: false });
     }
     return lines;
   }, []);
@@ -207,19 +284,24 @@ function Ground() {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[GRID * BLOCK * 2 + 20, GRID * BLOCK * 2 + 20]} />
-        <meshStandardMaterial color="#1C1430" roughness={1} />
+        <MeshReflectorMaterial
+          blur={[80, 25]}
+          resolution={768}
+          mixBlur={1.2}
+          mixStrength={6}
+          roughness={0.25}
+          depthScale={0.6}
+          minDepthThreshold={0.6}
+          maxDepthThreshold={1.4}
+          color="#100C1C"
+          metalness={0.5}
+        />
       </mesh>
       {roadLines.map((r, i) => (
-        <group key={i}>
-          <mesh position={r.pos} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <planeGeometry args={r.size} />
-            <meshStandardMaterial color="#2E2450" roughness={0.9} />
-          </mesh>
-          <mesh position={[r.pos[0], 0.02, r.pos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={r.vertical ? [0.25, r.size[1]] : [r.size[0], 0.25]} />
-            <meshStandardMaterial color="#F2C744" emissive="#F2C744" emissiveIntensity={0.5} toneMapped={false} />
-          </mesh>
-        </group>
+        <mesh key={i} position={[r.pos[0], 0.02, r.pos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={r.vertical ? [0.25, r.size[1]] : [r.size[0], 0.25]} />
+          <meshStandardMaterial color="#F2C744" emissive="#F2C744" emissiveIntensity={0.5} toneMapped={false} />
+        </mesh>
       ))}
     </group>
   );
@@ -364,10 +446,12 @@ export default function World3DScene() {
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
       />
+      <Stars radius={80} depth={30} count={2500} factor={3} saturation={0} fade speed={0.5} />
       <Ground />
       <City />
       <PlayerRig />
       <EffectComposer>
+        <N8AO aoRadius={2.5} intensity={2.2} distanceFalloff={1} />
         <Bloom luminanceThreshold={0.45} luminanceSmoothing={0.9} intensity={0.6} mipmapBlur />
         <Vignette eskil={false} offset={0.3} darkness={0.6} />
       </EffectComposer>

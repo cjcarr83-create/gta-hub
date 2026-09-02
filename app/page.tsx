@@ -28,10 +28,18 @@ export default async function FeedPage() {
 
       <Link
         href="/launch-hub"
-        className="mb-6 block rounded-lg border border-neon-pink/40 bg-gradient-to-r from-neon-pink/10 to-neon-violet/10 p-4"
+        className="mb-3 block rounded-lg border border-neon-pink/40 bg-gradient-to-r from-neon-pink/10 to-neon-violet/10 p-4"
       >
         <p className="text-xs uppercase tracking-widest text-neon-pink">The big drop</p>
         <p className="mt-1 font-display text-lg">GTA VI Launch Hub →</p>
+      </Link>
+
+      <Link
+        href="/characters"
+        className="mb-6 block rounded-lg border border-neon-violet/40 bg-gradient-to-r from-neon-violet/10 to-neon-pink/10 p-4"
+      >
+        <p className="text-xs uppercase tracking-widest text-neon-violet">Meet the cast</p>
+        <p className="mt-1 font-display text-lg">Characters →</p>
       </Link>
 
       {!videos || videos.length === 0 ? (

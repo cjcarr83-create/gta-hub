@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createTrustedClient } from "@/lib/supabase/trusted";
+import { paymentsEnabled } from "@/lib/featureFlags";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   apiVersion: "2024-06-20",
@@ -20,6 +21,15 @@ export async function POST() {
 
   if (!user) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+  }
+
+  // Kill switch: stop new Stripe Connect accounts from being created
+  // without touching existing tips/refunds/webhook handling.
+  if (!paymentsEnabled()) {
+    return NextResponse.json(
+      { error: "Creator payouts are temporarily unavailable." },
+      { status: 503 }
+    );
   }
 
   const trusted = createTrustedClient();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { createTrustedClient } from "@/lib/supabase/trusted";
+import { paymentsEnabled } from "@/lib/featureFlags";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
   apiVersion: "2024-06-20",
@@ -27,6 +28,16 @@ export async function POST(req: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Sign in to send a tip." }, { status: 401 });
+  }
+
+  // Kill switch: this only blocks NEW tips. Existing tips still refund
+  // (app/api/tips/[id]/refund/route.ts) and Stripe webhooks still process
+  // (app/api/webhooks/stripe/route.ts) regardless of this flag.
+  if (!paymentsEnabled()) {
+    return NextResponse.json(
+      { error: "Tipping is temporarily unavailable." },
+      { status: 503 }
+    );
   }
 
   const body = await req.json().catch(() => null);

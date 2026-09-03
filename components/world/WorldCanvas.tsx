@@ -517,7 +517,14 @@ const WorldCanvas = forwardRef<WorldCanvasHandle, WorldCanvasProps>(function Wor
   // ---- realtime ----
   useEffect(() => {
     const supabase = supabaseRef.current;
-    const channel = supabase.channel(WORLD_CHANNEL, { config: { presence: { key: userId } } });
+    // private: true activates Realtime Authorization — Supabase only
+    // consults the RLS policies on realtime.messages (see migration
+    // 0006_world_realtime_authorization.sql) once a channel is marked
+    // private; without it, this topic is open to anyone with the anon
+    // key regardless of sign-in state or account standing.
+    const channel = supabase.channel(WORLD_CHANNEL, {
+      config: { presence: { key: userId }, private: true },
+    });
     channelRef.current = channel;
 
     function sendMove(now: number) {

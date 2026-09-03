@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { MeshReflectorMaterial, RoundedBox, Stars, useTexture } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette, N8AO } from "@react-three/postprocessing";
@@ -110,6 +110,18 @@ function City() {
             <meshStandardMaterial color={b.color} roughness={0.85} />
           </mesh>
           <BuildingWindows w={b.w} h={b.h} d={b.d} seed={i} />
+          {/* rooftop AC unit + the occasional antenna — breaks up the
+              flat-topped-box skyline silhouette cheaply */}
+          <mesh position={[b.w * 0.2, b.h / 2 + 0.15, b.d * 0.15]} castShadow>
+            <boxGeometry args={[b.w * 0.28, 0.3, b.d * 0.24]} />
+            <meshStandardMaterial color="#0B0712" roughness={0.8} />
+          </mesh>
+          {i % 4 === 0 && (
+            <mesh position={[-b.w * 0.25, b.h / 2 + 0.75, -b.d * 0.2]}>
+              <cylinderGeometry args={[0.02, 0.02, 1.2, 6]} />
+              <meshStandardMaterial color="#0B0712" roughness={0.6} />
+            </mesh>
+          )}
         </group>
       ))}
       {parkedCars.map((c, i) => (
@@ -125,14 +137,9 @@ function City() {
   );
 }
 
-// A real grid of lit/unlit windows on one face per building, instead
-// of a handful of flat strips — reads as an actual building facade
-// rather than a decorated box. Kept to a single face and a capped row
-// count for draw-call/perf sanity (this is still all procedural
-// geometry, no textures).
-function BuildingWindows({ w, h, d, seed }: { w: number; h: number; d: number; seed: number }) {
-  const items = useMemo(() => {
-    const rand = seededRandom(seed * 97 + 13);
+function useWindowLayout(h: number, faceSpan: number, seed: number) {
+  return useMemo(() => {
+    const rand = seededRandom(seed);
     const rows = Math.min(6, Math.max(2, Math.floor(h / 1.4)));
     const cols = 3;
     const cellH = h / (rows + 1);
@@ -140,7 +147,7 @@ function BuildingWindows({ w, h, d, seed }: { w: number; h: number; d: number; s
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         out.push({
-          x: (c - (cols - 1) / 2) * (d * 0.3),
+          x: (c - (cols - 1) / 2) * (faceSpan * 0.3),
           y: -h / 2 + cellH * (r + 1),
           lit: rand() > 0.55,
           color: rand() > 0.5 ? "#FF2E93" : "#22D3EE",
@@ -148,22 +155,48 @@ function BuildingWindows({ w, h, d, seed }: { w: number; h: number; d: number; s
       }
     }
     return { rows, cellH, out };
-  }, [h, d, seed]);
+  }, [h, faceSpan, seed]);
+}
+
+// A real grid of lit/unlit windows on two adjacent faces per building
+// (the two most likely to be street-facing at a corner) instead of a
+// handful of flat strips — reads as an actual building facade rather
+// than a decorated box on the sides that matter, without the draw-call
+// cost of doing all four (this is still all procedural geometry, no
+// textures).
+function BuildingWindows({ w, h, d, seed }: { w: number; h: number; d: number; seed: number }) {
+  const faceX = useWindowLayout(h, d, seed * 97 + 13);
+  const faceZ = useWindowLayout(h, w, seed * 131 + 29);
 
   return (
-    <group position={[w / 2 + 0.01, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-      {items.out.map((win, i) => (
-        <mesh key={i} position={[win.x, win.y, 0]}>
-          <planeGeometry args={[d * 0.18, items.cellH * 0.55]} />
-          <meshStandardMaterial
-            color={win.lit ? win.color : "#1A1428"}
-            emissive={win.lit ? win.color : "#000000"}
-            emissiveIntensity={win.lit ? 1.6 : 0}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
-    </group>
+    <>
+      <group position={[w / 2 + 0.01, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+        {faceX.out.map((win, i) => (
+          <mesh key={i} position={[win.x, win.y, 0]}>
+            <planeGeometry args={[d * 0.18, faceX.cellH * 0.55]} />
+            <meshStandardMaterial
+              color={win.lit ? win.color : "#1A1428"}
+              emissive={win.lit ? win.color : "#000000"}
+              emissiveIntensity={win.lit ? 1.6 : 0}
+              toneMapped={false}
+            />
+          </mesh>
+        ))}
+      </group>
+      <group position={[0, 0, d / 2 + 0.01]}>
+        {faceZ.out.map((win, i) => (
+          <mesh key={i} position={[win.x, win.y, 0]}>
+            <planeGeometry args={[w * 0.18, faceZ.cellH * 0.55]} />
+            <meshStandardMaterial
+              color={win.lit ? win.color : "#1A1428"}
+              emissive={win.lit ? win.color : "#000000"}
+              emissiveIntensity={win.lit ? 1.6 : 0}
+              toneMapped={false}
+            />
+          </mesh>
+        ))}
+      </group>
+    </>
   );
 }
 
@@ -372,6 +405,162 @@ function Ground() {
 // real face would, instead of always facing the camera.
 const PLAYER_CHARACTER_SLUG = "rico-blaze";
 
+// Shared between the player rig and the background Pedestrians below —
+// same primitive body, same face-on-the-head-box trick, just parameterized
+// by portrait texture and by which refs the owner animates for its own
+// walk cycle (player: keyboard-driven; pedestrian: a scripted patrol).
+function CharacterBody({
+  portrait,
+  leftLegRef,
+  rightLegRef,
+  leftArmRef,
+  rightArmRef,
+}: {
+  portrait: THREE.Texture;
+  leftLegRef: RefObject<THREE.Group | null>;
+  rightLegRef: RefObject<THREE.Group | null>;
+  leftArmRef: RefObject<THREE.Group | null>;
+  rightArmRef: RefObject<THREE.Group | null>;
+}) {
+  return (
+    <>
+      {/* torso — rounded panel + a narrower waist block for a slight
+          taper instead of a single flat slab */}
+      <RoundedBox args={[0.5, 0.55, 0.3]} radius={0.08} smoothness={4} position={[0, 1.12, 0]} castShadow>
+        <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+      </RoundedBox>
+      <RoundedBox args={[0.4, 0.25, 0.26]} radius={0.06} smoothness={4} position={[0, 0.8, 0]} castShadow>
+        <meshStandardMaterial color="#170F26" roughness={0.6} />
+      </RoundedBox>
+      {/* neck */}
+      <mesh position={[0, 1.42, 0]} castShadow>
+        <cylinderGeometry args={[0.08, 0.09, 0.1, 8]} />
+        <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
+      </mesh>
+      {/* head — a real 3D block (viewable from every angle, unlike a
+          billboard), with the actual character portrait mapped onto the
+          front face only. Three.js gives a BoxGeometry six material
+          groups in a fixed order (+x, -x, +y, -y, +z, -z); the front
+          face (+z, the direction the rig faces at rotation 0) gets the
+          portrait, every other face gets a plain hair/skin fill. */}
+      <mesh position={[0, 1.62, 0]} castShadow>
+        <boxGeometry args={[0.32, 0.34, 0.3]} />
+        <meshStandardMaterial attach="material-0" color="#170F26" roughness={0.7} />
+        <meshStandardMaterial attach="material-1" color="#170F26" roughness={0.7} />
+        <meshStandardMaterial attach="material-2" color="#170F26" roughness={0.7} />
+        <meshStandardMaterial attach="material-3" color="#E8C9A8" roughness={0.6} />
+        <meshStandardMaterial attach="material-4" map={portrait} roughness={0.6} />
+        <meshStandardMaterial attach="material-5" color="#170F26" roughness={0.7} />
+      </mesh>
+      {/* legs — each a group pivoted at the hip so rotation swings like
+          a real limb instead of spinning around its own middle; a
+          rounded shoe caps each foot */}
+      <group ref={leftLegRef} position={[-0.13, 0.68, 0]}>
+        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
+          <meshStandardMaterial color="#170F26" roughness={0.6} />
+        </RoundedBox>
+        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
+          <meshStandardMaterial color="#0B0712" roughness={0.5} />
+        </RoundedBox>
+      </group>
+      <group ref={rightLegRef} position={[0.13, 0.68, 0]}>
+        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
+          <meshStandardMaterial color="#170F26" roughness={0.6} />
+        </RoundedBox>
+        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
+          <meshStandardMaterial color="#0B0712" roughness={0.5} />
+        </RoundedBox>
+      </group>
+      {/* arms — pivoted at the shoulder, with a rounded hand at the end */}
+      <group ref={leftArmRef} position={[-0.33, 1.32, 0]}>
+        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
+          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </RoundedBox>
+        <mesh position={[0, -0.52, 0]} castShadow>
+          <sphereGeometry args={[0.08, 12, 12]} />
+          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
+        </mesh>
+      </group>
+      <group ref={rightArmRef} position={[0.33, 1.32, 0]}>
+        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
+          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </RoundedBox>
+        <mesh position={[0, -0.52, 0]} castShadow>
+          <sphereGeometry args={[0.08, 12, 12]} />
+          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
+        </mesh>
+      </group>
+    </>
+  );
+}
+
+// A handful of background pedestrians, each running the same body as the
+// player but scripted (ping-ponging along a short sidewalk stretch)
+// instead of keyboard-driven. Mostly here to put more of the real cast
+// portraits on screen and make the city read as inhabited rather than a
+// showroom the player walks through alone.
+function Pedestrian({
+  slug,
+  start,
+  end,
+  speed,
+  phase,
+}: {
+  slug: string;
+  start: [number, number, number];
+  end: [number, number, number];
+  speed: number;
+  phase: number;
+}) {
+  const group = useRef<THREE.Group>(null);
+  const leftLeg = useRef<THREE.Group>(null);
+  const rightLeg = useRef<THREE.Group>(null);
+  const leftArm = useRef<THREE.Group>(null);
+  const rightArm = useRef<THREE.Group>(null);
+  const t = useRef(phase);
+
+  const portrait = useTexture(`/characters/${slug}.webp`, (tex) => {
+    (tex as THREE.Texture).colorSpace = THREE.SRGBColorSpace;
+  });
+  const from = useMemo(() => new THREE.Vector3(...start), [start]);
+  const to = useMemo(() => new THREE.Vector3(...end), [end]);
+  const facingForward = useMemo(
+    () => Math.atan2(to.x - from.x, to.z - from.z),
+    [from, to]
+  );
+
+  useFrame((_, delta) => {
+    t.current += delta * speed;
+    const s = (Math.sin(t.current) + 1) / 2; // ping-pongs 0..1..0
+    const goingForward = Math.cos(t.current) >= 0;
+    if (group.current) {
+      group.current.position.lerpVectors(from, to, s);
+      group.current.rotation.y = goingForward ? facingForward : facingForward + Math.PI;
+    }
+    const swing = Math.sin(t.current * 10) * 0.6;
+    if (leftLeg.current) leftLeg.current.rotation.x = swing;
+    if (rightLeg.current) rightLeg.current.rotation.x = -swing;
+    if (leftArm.current) leftArm.current.rotation.x = -swing;
+    if (rightArm.current) rightArm.current.rotation.x = swing;
+  });
+
+  return (
+    <group ref={group}>
+      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.5, 20]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.4} />
+      </mesh>
+      <CharacterBody
+        portrait={portrait}
+        leftLegRef={leftLeg}
+        rightLegRef={rightLeg}
+        leftArmRef={leftArm}
+        rightArmRef={rightArm}
+      />
+    </group>
+  );
+}
+
 // Owns the player's position, facing, walk-cycle animation, and the
 // chase camera entirely through its own local refs (never received as
 // a prop to mutate) — keyboard input, the per-frame position update,
@@ -463,76 +652,28 @@ function PlayerRig() {
         <meshBasicMaterial color="#000000" transparent opacity={0.45} />
       </mesh>
 
-      {/* torso — rounded panel + a narrower waist block for a slight
-          taper instead of a single flat slab */}
-      <RoundedBox args={[0.5, 0.55, 0.3]} radius={0.08} smoothness={4} position={[0, 1.12, 0]} castShadow>
-        <meshStandardMaterial color="#FF2E93" roughness={0.5} />
-      </RoundedBox>
-      <RoundedBox args={[0.4, 0.25, 0.26]} radius={0.06} smoothness={4} position={[0, 0.8, 0]} castShadow>
-        <meshStandardMaterial color="#170F26" roughness={0.6} />
-      </RoundedBox>
-      {/* neck */}
-      <mesh position={[0, 1.42, 0]} castShadow>
-        <cylinderGeometry args={[0.08, 0.09, 0.1, 8]} />
-        <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
-      </mesh>
-      {/* head — a real 3D block (viewable from every angle, unlike a
-          billboard), with the actual character portrait mapped onto the
-          front face only. Three.js gives a BoxGeometry six material
-          groups in a fixed order (+x, -x, +y, -y, +z, -z); the front
-          face (+z, the direction the rig faces at rotation 0) gets the
-          portrait, every other face gets a plain hair/skin fill. */}
-      <mesh position={[0, 1.62, 0]} castShadow>
-        <boxGeometry args={[0.32, 0.34, 0.3]} />
-        <meshStandardMaterial attach="material-0" color="#170F26" roughness={0.7} />
-        <meshStandardMaterial attach="material-1" color="#170F26" roughness={0.7} />
-        <meshStandardMaterial attach="material-2" color="#170F26" roughness={0.7} />
-        <meshStandardMaterial attach="material-3" color="#E8C9A8" roughness={0.6} />
-        <meshStandardMaterial attach="material-4" map={portrait} roughness={0.6} />
-        <meshStandardMaterial attach="material-5" color="#170F26" roughness={0.7} />
-      </mesh>
-      {/* legs — each a group pivoted at the hip so rotation swings like
-          a real limb instead of spinning around its own middle; a
-          rounded shoe caps each foot */}
-      <group ref={leftLeg} position={[-0.13, 0.68, 0]}>
-        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
-          <meshStandardMaterial color="#170F26" roughness={0.6} />
-        </RoundedBox>
-        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
-          <meshStandardMaterial color="#0B0712" roughness={0.5} />
-        </RoundedBox>
-      </group>
-      <group ref={rightLeg} position={[0.13, 0.68, 0]}>
-        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
-          <meshStandardMaterial color="#170F26" roughness={0.6} />
-        </RoundedBox>
-        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
-          <meshStandardMaterial color="#0B0712" roughness={0.5} />
-        </RoundedBox>
-      </group>
-      {/* arms — pivoted at the shoulder, with a rounded hand at the end */}
-      <group ref={leftArm} position={[-0.33, 1.32, 0]}>
-        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
-          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
-        </RoundedBox>
-        <mesh position={[0, -0.52, 0]} castShadow>
-          <sphereGeometry args={[0.08, 12, 12]} />
-          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
-        </mesh>
-      </group>
-      <group ref={rightArm} position={[0.33, 1.32, 0]}>
-        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
-          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
-        </RoundedBox>
-        <mesh position={[0, -0.52, 0]} castShadow>
-          <sphereGeometry args={[0.08, 12, 12]} />
-          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
-        </mesh>
-      </group>
+      <CharacterBody
+        portrait={portrait}
+        leftLegRef={leftLeg}
+        rightLegRef={rightLeg}
+        leftArmRef={leftArm}
+        rightArmRef={rightArm}
+      />
       <pointLight position={[0, 2.0, 0]} color="#FF2E93" intensity={0.4} distance={3} decay={2} />
     </group>
   );
 }
+
+// Fixed sidewalk patrol routes for a few of the cast, placed along the
+// through-streets (see BLOCK/GRID in City above) near where the player
+// spawns, so at least a couple are visible without having to go looking.
+const PEDESTRIANS: { slug: string; start: [number, number, number]; end: [number, number, number]; speed: number; phase: number }[] = [
+  { slug: "maya-cruz", start: [2.4, 0, -6], end: [2.4, 0, -1], speed: 0.6, phase: 0 },
+  { slug: "darnell-king", start: [-2.4, 0, 2], end: [-2.4, 0, 8], speed: 0.5, phase: 1 },
+  { slug: "sofia-vale", start: [8, 0, 2.4], end: [13, 0, 2.4], speed: 0.55, phase: 2 },
+  { slug: "tyrese-quinn", start: [-13, 0, -2.4], end: [-8, 0, -2.4], speed: 0.45, phase: 0.5 },
+  { slug: "lena-voss", start: [2.4, 0, 9], end: [2.4, 0, 14], speed: 0.5, phase: 3 },
+];
 
 export default function World3DScene() {
   return (
@@ -554,6 +695,11 @@ export default function World3DScene() {
       <City />
       <Suspense fallback={null}>
         <PlayerRig />
+      </Suspense>
+      <Suspense fallback={null}>
+        {PEDESTRIANS.map((p) => (
+          <Pedestrian key={p.slug} {...p} />
+        ))}
       </Suspense>
       <EffectComposer>
         <N8AO aoRadius={2.5} intensity={2.2} distanceFalloff={1} />

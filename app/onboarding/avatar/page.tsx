@@ -12,6 +12,7 @@ import {
   VIBES,
   type AvatarStyle,
 } from "@/lib/avatarStyles";
+import { CHARACTERS, type Character } from "@/lib/characters";
 
 // Every field here maps directly to a fixed enum in lib/avatarGen.ts —
 // there is deliberately no freeform "describe your character" field.
@@ -124,6 +125,36 @@ export default function AvatarOnboardingPage() {
     setStyle((prev) => ({ ...prev, [key]: value }));
   }
 
+  // Play as one of the pre-made cast (lib/characters.ts, public/characters/)
+  // instead of waiting on AI generation — same idea as handleUsePlaceholder
+  // below, but with real character art instead of an abstract SVG circle.
+  async function handleUseCharacter(character: Character) {
+    setStatus("saving");
+    setErrorMsg("");
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sign in required.");
+
+      const url = `/characters/${character.slug}.webp`;
+      const name = displayName.trim() || character.name;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: url, display_name: name.slice(0, 40) })
+        .eq("id", user.id);
+      if (error) throw new Error(error.message);
+
+      setDisplayName(name);
+      setResultUrl(url);
+      setStatus("idle");
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(err instanceof Error ? err.message : "Could not set character.");
+    }
+  }
+
   async function handleUsePlaceholder(url: string) {
     setStatus("saving");
     setErrorMsg("");
@@ -223,9 +254,37 @@ export default function AvatarOnboardingPage() {
 
       <div className="card mb-4 space-y-3">
         <div>
-          <p className="text-sm">Testing right now?</p>
+          <p className="text-sm">Play as one of the cast</p>
           <p className="text-xs text-frost-muted">
-            AI portraits aren&apos;t live yet — grab a placeholder to skip straight to The Block.
+            Skip the AI wait — pick a ready-made character and drop straight into The Block.
+          </p>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {CHARACTERS.map((character) => {
+            const url = `/characters/${character.slug}.webp`;
+            return (
+              <button
+                key={character.id}
+                type="button"
+                onClick={() => handleUseCharacter(character)}
+                disabled={status === "saving" || status === "generating"}
+                className={`overflow-hidden rounded border-2 text-left transition-colors disabled:opacity-50
+                  ${resultUrl === url ? "border-neon-pink" : "border-ink-line hover:border-neon-violet"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={character.name} className="aspect-square w-full object-cover" />
+                <p className="truncate px-1 py-0.5 text-[10px] text-frost-muted">{character.name}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="card mb-4 space-y-3">
+        <div>
+          <p className="text-sm">Or keep it simple</p>
+          <p className="text-xs text-frost-muted">
+            A plain placeholder, if you&apos;d rather not play as a named character.
           </p>
         </div>
         <div className="flex gap-3">

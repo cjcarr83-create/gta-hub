@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { MeshReflectorMaterial, RoundedBox, Stars } from "@react-three/drei";
+import { Billboard, MeshReflectorMaterial, RoundedBox, Stars, useTexture } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette, N8AO } from "@react-three/postprocessing";
 import * as THREE from "three";
 
@@ -356,11 +356,21 @@ function Ground() {
   );
 }
 
+// Original character art (see public/characters/, lib/characters.ts) is
+// a set of 2D bust portraits, not a rigged 3D model or a set of turnaround
+// sprites — there's no geometry to build a real 3D character from. Rather
+// than keep showing a generic primitive mannequin, the player is a
+// camera-facing "character card" (billboard) carrying that real portrait,
+// same idea as a standee or a fighting-game select card: it reads as an
+// actual character at a glance, which a box-and-sphere rig never will,
+// without pretending to be a 3D model it isn't.
+const PLAYER_CHARACTER_SLUG = "rico-blaze";
+
 // Owns the player's position, facing, walk-cycle animation, and the
 // chase camera entirely through its own local refs (never received as
 // a prop to mutate) — keyboard input, the per-frame position update,
-// the articulated character, and the camera follow all live in one
-// component so nothing here mutates state it doesn't own.
+// the character card, and the camera follow all live in one component
+// so nothing here mutates state it doesn't own.
 function PlayerRig() {
   const playerGroup = useRef<THREE.Group>(null);
   const position = useRef(new THREE.Vector3(0, 0, 0));
@@ -370,11 +380,11 @@ function PlayerRig() {
   const { camera } = useThree();
   const cameraTarget = useRef(new THREE.Vector3());
   const cameraLookAt = useRef(new THREE.Vector3());
+  const cardGroup = useRef<THREE.Group>(null);
 
-  const leftLeg = useRef<THREE.Group>(null);
-  const rightLeg = useRef<THREE.Group>(null);
-  const leftArm = useRef<THREE.Group>(null);
-  const rightArm = useRef<THREE.Group>(null);
+  const portrait = useTexture(`/characters/${PLAYER_CHARACTER_SLUG}.webp`, (tex) => {
+    (tex as THREE.Texture).colorSpace = THREE.SRGBColorSpace;
+  });
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -415,11 +425,12 @@ function PlayerRig() {
       playerGroup.current.rotation.y = facing.current;
     }
 
-    const swing = moving ? Math.sin(walkPhase.current) * 0.7 : 0;
-    if (leftLeg.current) leftLeg.current.rotation.x = swing;
-    if (rightLeg.current) rightLeg.current.rotation.x = -swing;
-    if (leftArm.current) leftArm.current.rotation.x = -swing;
-    if (rightArm.current) rightArm.current.rotation.x = swing;
+    // Card can't articulate limbs, so a small bounce + lean stands in
+    // for a walk cycle instead.
+    if (cardGroup.current) {
+      cardGroup.current.position.y = moving ? Math.abs(Math.sin(walkPhase.current * 2)) * 0.12 : 0;
+      cardGroup.current.rotation.z = moving ? Math.sin(walkPhase.current) * 0.05 : 0;
+    }
 
     // Chase camera stays behind the character relative to facing, not
     // a fixed world offset — turns with the player like a real
@@ -438,73 +449,23 @@ function PlayerRig() {
 
   return (
     <group ref={playerGroup}>
-      {/* torso — rounded panel + a narrower waist block for a slight
-          taper instead of a single flat slab */}
-      <RoundedBox args={[0.5, 0.55, 0.3]} radius={0.08} smoothness={4} position={[0, 1.12, 0]} castShadow>
-        <meshStandardMaterial color="#FF2E93" roughness={0.5} />
-      </RoundedBox>
-      <RoundedBox args={[0.4, 0.25, 0.26]} radius={0.06} smoothness={4} position={[0, 0.8, 0]} castShadow>
-        <meshStandardMaterial color="#170F26" roughness={0.6} />
-      </RoundedBox>
-      {/* neck */}
-      <mesh position={[0, 1.42, 0]} castShadow>
-        <cylinderGeometry args={[0.08, 0.09, 0.1, 8]} />
-        <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
+      {/* soft contact shadow so the card doesn't look like it's floating */}
+      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.55, 24]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.45} />
       </mesh>
-      {/* head + hair cap + simple eyes */}
-      <mesh position={[0, 1.58, 0]} castShadow>
-        <sphereGeometry args={[0.2, 20, 20]} />
-        <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
-      </mesh>
-      <mesh position={[0, 1.66, -0.02]} castShadow>
-        <sphereGeometry args={[0.205, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
-        <meshStandardMaterial color="#170F26" roughness={0.7} />
-      </mesh>
-      <mesh position={[0.08, 1.58, 0.18]}>
-        <sphereGeometry args={[0.025, 8, 8]} />
-        <meshStandardMaterial color="#0B0712" />
-      </mesh>
-      <mesh position={[-0.08, 1.58, 0.18]}>
-        <sphereGeometry args={[0.025, 8, 8]} />
-        <meshStandardMaterial color="#0B0712" />
-      </mesh>
-      {/* legs — each a group pivoted at the hip so rotation swings like
-          a real limb instead of spinning around its own middle; a
-          rounded shoe caps each foot */}
-      <group ref={leftLeg} position={[-0.13, 0.68, 0]}>
-        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
-          <meshStandardMaterial color="#170F26" roughness={0.6} />
-        </RoundedBox>
-        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
-          <meshStandardMaterial color="#0B0712" roughness={0.5} />
-        </RoundedBox>
-      </group>
-      <group ref={rightLeg} position={[0.13, 0.68, 0]}>
-        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
-          <meshStandardMaterial color="#170F26" roughness={0.6} />
-        </RoundedBox>
-        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
-          <meshStandardMaterial color="#0B0712" roughness={0.5} />
-        </RoundedBox>
-      </group>
-      {/* arms — pivoted at the shoulder, with a rounded hand at the end */}
-      <group ref={leftArm} position={[-0.33, 1.32, 0]}>
-        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
-          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
-        </RoundedBox>
-        <mesh position={[0, -0.52, 0]} castShadow>
-          <sphereGeometry args={[0.08, 12, 12]} />
-          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
-        </mesh>
-      </group>
-      <group ref={rightArm} position={[0.33, 1.32, 0]}>
-        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
-          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
-        </RoundedBox>
-        <mesh position={[0, -0.52, 0]} castShadow>
-          <sphereGeometry args={[0.08, 12, 12]} />
-          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
-        </mesh>
+      <group ref={cardGroup} position={[0, 1.0, 0]}>
+        <Billboard>
+          {/* neon frame, slightly larger and set back, showing as a border */}
+          <mesh position={[0, 0, -0.02]}>
+            <planeGeometry args={[1.5, 1.5]} />
+            <meshStandardMaterial color="#FF2E93" emissive="#FF2E93" emissiveIntensity={0.8} toneMapped={false} />
+          </mesh>
+          <mesh castShadow>
+            <planeGeometry args={[1.4, 1.4]} />
+            <meshStandardMaterial map={portrait} roughness={0.6} />
+          </mesh>
+        </Billboard>
       </group>
       <pointLight position={[0, 2.0, 0]} color="#FF2E93" intensity={0.4} distance={3} decay={2} />
     </group>
@@ -529,7 +490,9 @@ export default function World3DScene() {
       <Stars radius={80} depth={30} count={2500} factor={3} saturation={0} fade speed={0.5} />
       <Ground />
       <City />
-      <PlayerRig />
+      <Suspense fallback={null}>
+        <PlayerRig />
+      </Suspense>
       <EffectComposer>
         <N8AO aoRadius={2.5} intensity={2.2} distanceFalloff={1} />
         <Bloom luminanceThreshold={0.45} luminanceSmoothing={0.9} intensity={0.6} mipmapBlur />

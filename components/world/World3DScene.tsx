@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Billboard, MeshReflectorMaterial, RoundedBox, Stars, useTexture } from "@react-three/drei";
+import { MeshReflectorMaterial, RoundedBox, Stars, useTexture } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette, N8AO } from "@react-three/postprocessing";
 import * as THREE from "three";
 
@@ -356,14 +356,20 @@ function Ground() {
   );
 }
 
-// Original character art (see public/characters/, lib/characters.ts) is
-// a set of 2D bust portraits, not a rigged 3D model or a set of turnaround
-// sprites — there's no geometry to build a real 3D character from. Rather
-// than keep showing a generic primitive mannequin, the player is a
-// camera-facing "character card" (billboard) carrying that real portrait,
-// same idea as a standee or a fighting-game select card: it reads as an
-// actual character at a glance, which a box-and-sphere rig never will,
-// without pretending to be a 3D model it isn't.
+// Original character art (see public/characters/, lib/characters.ts) is a
+// set of 2D bust portraits, not a rigged 3D model or a set of turnaround
+// sprites — there's no real geometry or side/back views to build an actual
+// 3D face from, and no path in this environment to generate one (no network
+// access to a 3D-generation service, no way to model/rig by hand here).
+// A camera-facing billboard card was tried first and reads worse as "3D"
+// than the plain primitive rig did — it flattens to a sliver from the side
+// and never turns with the character, which breaks the illusion this is a
+// character standing in the world rather than a sprite glued to the lens.
+// This keeps the primitive body (real geometry, walkable around from any
+// angle — the actual "3D" part, and the closer match to how blocky
+// San Andreas' own low-poly characters are built) and mounts the portrait
+// as a face panel fixed to the head, turning with the character like a
+// real face would, instead of always facing the camera.
 const PLAYER_CHARACTER_SLUG = "rico-blaze";
 
 // Owns the player's position, facing, walk-cycle animation, and the
@@ -380,7 +386,10 @@ function PlayerRig() {
   const { camera } = useThree();
   const cameraTarget = useRef(new THREE.Vector3());
   const cameraLookAt = useRef(new THREE.Vector3());
-  const cardGroup = useRef<THREE.Group>(null);
+  const leftLeg = useRef<THREE.Group>(null);
+  const rightLeg = useRef<THREE.Group>(null);
+  const leftArm = useRef<THREE.Group>(null);
+  const rightArm = useRef<THREE.Group>(null);
 
   const portrait = useTexture(`/characters/${PLAYER_CHARACTER_SLUG}.webp`, (tex) => {
     (tex as THREE.Texture).colorSpace = THREE.SRGBColorSpace;
@@ -425,12 +434,11 @@ function PlayerRig() {
       playerGroup.current.rotation.y = facing.current;
     }
 
-    // Card can't articulate limbs, so a small bounce + lean stands in
-    // for a walk cycle instead.
-    if (cardGroup.current) {
-      cardGroup.current.position.y = moving ? Math.abs(Math.sin(walkPhase.current * 2)) * 0.12 : 0;
-      cardGroup.current.rotation.z = moving ? Math.sin(walkPhase.current) * 0.05 : 0;
-    }
+    const swing = moving ? Math.sin(walkPhase.current) * 0.7 : 0;
+    if (leftLeg.current) leftLeg.current.rotation.x = swing;
+    if (rightLeg.current) rightLeg.current.rotation.x = -swing;
+    if (leftArm.current) leftArm.current.rotation.x = -swing;
+    if (rightArm.current) rightArm.current.rotation.x = swing;
 
     // Chase camera stays behind the character relative to facing, not
     // a fixed world offset — turns with the player like a real
@@ -449,23 +457,77 @@ function PlayerRig() {
 
   return (
     <group ref={playerGroup}>
-      {/* soft contact shadow so the card doesn't look like it's floating */}
+      {/* soft contact shadow */}
       <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.55, 24]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.45} />
       </mesh>
-      <group ref={cardGroup} position={[0, 1.0, 0]}>
-        <Billboard>
-          {/* neon frame, slightly larger and set back, showing as a border */}
-          <mesh position={[0, 0, -0.02]}>
-            <planeGeometry args={[1.5, 1.5]} />
-            <meshStandardMaterial color="#FF2E93" emissive="#FF2E93" emissiveIntensity={0.8} toneMapped={false} />
-          </mesh>
-          <mesh castShadow>
-            <planeGeometry args={[1.4, 1.4]} />
-            <meshStandardMaterial map={portrait} roughness={0.6} />
-          </mesh>
-        </Billboard>
+
+      {/* torso — rounded panel + a narrower waist block for a slight
+          taper instead of a single flat slab */}
+      <RoundedBox args={[0.5, 0.55, 0.3]} radius={0.08} smoothness={4} position={[0, 1.12, 0]} castShadow>
+        <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+      </RoundedBox>
+      <RoundedBox args={[0.4, 0.25, 0.26]} radius={0.06} smoothness={4} position={[0, 0.8, 0]} castShadow>
+        <meshStandardMaterial color="#170F26" roughness={0.6} />
+      </RoundedBox>
+      {/* neck */}
+      <mesh position={[0, 1.42, 0]} castShadow>
+        <cylinderGeometry args={[0.08, 0.09, 0.1, 8]} />
+        <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
+      </mesh>
+      {/* head — a real 3D block (viewable from every angle, unlike a
+          billboard), with the actual character portrait mapped onto the
+          front face only. Three.js gives a BoxGeometry six material
+          groups in a fixed order (+x, -x, +y, -y, +z, -z); the front
+          face (+z, the direction the rig faces at rotation 0) gets the
+          portrait, every other face gets a plain hair/skin fill. */}
+      <mesh position={[0, 1.62, 0]} castShadow>
+        <boxGeometry args={[0.32, 0.34, 0.3]} />
+        <meshStandardMaterial attach="material-0" color="#170F26" roughness={0.7} />
+        <meshStandardMaterial attach="material-1" color="#170F26" roughness={0.7} />
+        <meshStandardMaterial attach="material-2" color="#170F26" roughness={0.7} />
+        <meshStandardMaterial attach="material-3" color="#E8C9A8" roughness={0.6} />
+        <meshStandardMaterial attach="material-4" map={portrait} roughness={0.6} />
+        <meshStandardMaterial attach="material-5" color="#170F26" roughness={0.7} />
+      </mesh>
+      {/* legs — each a group pivoted at the hip so rotation swings like
+          a real limb instead of spinning around its own middle; a
+          rounded shoe caps each foot */}
+      <group ref={leftLeg} position={[-0.13, 0.68, 0]}>
+        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
+          <meshStandardMaterial color="#170F26" roughness={0.6} />
+        </RoundedBox>
+        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
+          <meshStandardMaterial color="#0B0712" roughness={0.5} />
+        </RoundedBox>
+      </group>
+      <group ref={rightLeg} position={[0.13, 0.68, 0]}>
+        <RoundedBox args={[0.17, 0.6, 0.17]} radius={0.05} smoothness={3} position={[0, -0.3, 0]} castShadow>
+          <meshStandardMaterial color="#170F26" roughness={0.6} />
+        </RoundedBox>
+        <RoundedBox args={[0.19, 0.12, 0.26]} radius={0.04} smoothness={3} position={[0, -0.62, 0.04]} castShadow>
+          <meshStandardMaterial color="#0B0712" roughness={0.5} />
+        </RoundedBox>
+      </group>
+      {/* arms — pivoted at the shoulder, with a rounded hand at the end */}
+      <group ref={leftArm} position={[-0.33, 1.32, 0]}>
+        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
+          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </RoundedBox>
+        <mesh position={[0, -0.52, 0]} castShadow>
+          <sphereGeometry args={[0.08, 12, 12]} />
+          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
+        </mesh>
+      </group>
+      <group ref={rightArm} position={[0.33, 1.32, 0]}>
+        <RoundedBox args={[0.14, 0.5, 0.14]} radius={0.04} smoothness={3} position={[0, -0.25, 0]} castShadow>
+          <meshStandardMaterial color="#FF2E93" roughness={0.5} />
+        </RoundedBox>
+        <mesh position={[0, -0.52, 0]} castShadow>
+          <sphereGeometry args={[0.08, 12, 12]} />
+          <meshStandardMaterial color="#E8C9A8" roughness={0.6} />
+        </mesh>
       </group>
       <pointLight position={[0, 2.0, 0]} color="#FF2E93" intensity={0.4} distance={3} decay={2} />
     </group>
